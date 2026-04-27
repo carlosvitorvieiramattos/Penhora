@@ -16,9 +16,7 @@ import {
   Plus,
   LayoutGrid,
   Pencil,
-  Eye,
-  Copy,
-  Trash2
+  Eye
 } from 'lucide-react';
 import './App.css';
 
