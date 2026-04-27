@@ -15,7 +15,10 @@ import {
   RotateCcw,
   Plus,
   LayoutGrid,
-  Pencil
+  Pencil,
+  Eye,
+  Copy,
+  Trash2
 } from 'lucide-react';
 import './App.css';
 
@@ -122,6 +125,13 @@ function App() {
   const [earlyPayoffValue, setEarlyPayoffValue] = useState<number>(0);
   const [showPayoffModal, setShowPayoffModal] = useState<boolean>(false);
   const [payoffObservations, setPayoffObservations] = useState<string>('');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => setOpenDropdownId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const [listPenhoras, setListPenhoras] = useState<Penhora[]>(INITIAL_MOCK_PENHORAS);
 
@@ -1056,23 +1066,57 @@ function App() {
                                   </td>
 
                                   <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
+                                    <div className="split-btn-group" style={{ position: 'relative', display: 'inline-flex' }}>
                                       <button
-                                        className="btn btn-primary"
-                                        style={{ padding: '5px 12px', height: '30px', fontSize: '0.75rem', background: '#3B82F6', border: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-                                        onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); }}
+                                        className="btn btn-primary split-btn-main"
+                                        style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, padding: '5px 12px', height: '30px', background: '#1E88E5', border: 'none', display: 'flex', alignItems: 'center' }}
+                                        onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setOpenDropdownId(null); }}
+                                        title="Visualizar"
                                       >
-                                        <Calculator size={14} />
-                                        Visualizar
+                                        <Eye size={16} />
                                       </button>
                                       <button
-                                        className="btn btn-secondary"
-                                        style={{ padding: '5px 12px', height: '30px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'white', border: '1px solid #E2E8F0', color: '#475569' }}
-                                        onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
+                                        className="btn btn-primary split-btn-trigger"
+                                        style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, padding: '5px 6px', height: '30px', background: '#1E88E5', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); 
+                                          setOpenDropdownId(openDropdownId === item.id ? null : item.id); 
+                                        }}
                                       >
-                                        <Pencil size={14} />
-                                        Editar
+                                        <ChevronDown size={14} />
                                       </button>
+
+                                      {openDropdownId === item.id && (
+                                        <div className="action-dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 10, minWidth: '130px', display: 'flex', flexDirection: 'column', border: '1px solid #E2E8F0', padding: '4px 0' }}>
+                                          <button 
+                                            className="dropdown-item" 
+                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                            onClick={(e) => { e.stopPropagation(); handleEdit(item); setOpenDropdownId(null); }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                          >
+                                            <Pencil size={14} color="#64748B" /> Editar
+                                          </button>
+                                          <button 
+                                            className="dropdown-item" 
+                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                            onClick={(e) => { e.stopPropagation(); alert('Duplicar não implementado'); setOpenDropdownId(null); }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                          >
+                                            <Copy size={14} color="#64748B" /> Duplicar
+                                          </button>
+                                          <button 
+                                            className="dropdown-item text-danger" 
+                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                            onClick={(e) => { e.stopPropagation(); alert('Excluir não implementado'); setOpenDropdownId(null); }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = '#FEE2E2'}
+                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                          >
+                                            <Trash2 size={14} color="#EF4444" /> Excluir
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
