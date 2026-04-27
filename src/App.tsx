@@ -114,7 +114,10 @@ function App() {
   const [nomeServidor, setNomeServidor] = useState<string>('');
   const [numeroProcesso, setNumeroProcesso] = useState<string>('');
   const [varaJudicial, setVaraJudicial] = useState<string>('');
-  const [dataInicioForm, setDataInicioForm] = useState<string>('');
+  const [dataInicioForm, setDataInicioForm] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [dataTerminoForm, setDataTerminoForm] = useState<string>('');
   const [status, setStatus] = useState<string>('Ativo');
   const [earlyPayoffValue, setEarlyPayoffValue] = useState<number>(0);
