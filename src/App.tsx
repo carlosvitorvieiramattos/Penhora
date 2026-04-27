@@ -311,13 +311,17 @@ function App() {
 
   // Auto-generate dates based on debt and installments
   useEffect(() => {
-    if (totalDebt > 0 && finalDiscount > 0 && dataInicioForm) {
-      // Use existing date but handle YYYY-MM-DD format
+    if (totalDebt > 0 && finalDiscount > 0) {
+      // Use existing date or fallback to today for calculation
       let start: Date;
-      const dateParts = dataInicioForm.split('-');
-      if (dateParts.length === 3) {
-        const [y, m, d] = dateParts.map(Number);
-        start = new Date(y, m - 1, d);
+      if (dataInicioForm) {
+        const dateParts = dataInicioForm.split('-');
+        if (dateParts.length === 3) {
+          const [y, m, d] = dateParts.map(Number);
+          start = new Date(y, m - 1, d);
+        } else {
+          start = new Date();
+        }
       } else {
         start = new Date();
       }
@@ -881,6 +885,13 @@ function App() {
                         <div className="calc-row total" style={{ marginTop: '0.5rem', borderTop: '1px dashed var(--panel-border)', paddingTop: '0.75rem', paddingLeft: '0.75rem', paddingRight: '0.75rem' }}>
                           <span style={{ fontSize: '0.85rem' }}><strong>Base Líquida Final:</strong></span>
                           <span style={{ fontSize: '0.85rem' }}><strong>R$ {totals.net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                        </div>
+
+                        <div className="calc-row" style={{ padding: '0 0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tempo de Duração:</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                            {totalDebt > 0 && finalDiscount > 0 ? `${Math.ceil(totalDebt / finalDiscount)} parcelas` : '-'}
+                          </span>
                         </div>
 
                         <div className="calc-row final-discount" style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
