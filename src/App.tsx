@@ -126,6 +126,7 @@ function App() {
   const [showPayoffModal, setShowPayoffModal] = useState<boolean>(false);
   const [payoffObservations, setPayoffObservations] = useState<string>('');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdownId(null);
@@ -366,7 +367,8 @@ function App() {
       )}
 
       {/* Sidebar Navigation - SIGEP Layout */}
-      <aside className="sidebar">
+      <div className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="logo-container">
           <div className="logo-text">
             <span>SEPLAG</span>
@@ -430,7 +432,8 @@ function App() {
         {/* Topbar matching layout */}
         <div className="topbar">
           <div className="topbar-left">
-            <X size={20} style={{ cursor: 'pointer' }} />
+            <Menu className="mobile-menu-btn" size={20} onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <X size={20} style={{ cursor: 'pointer' }} className="hide-on-mobile" />
           </div>
           <div className="topbar-right">
             <span>gestão - Teste</span>
@@ -759,7 +762,20 @@ function App() {
                       </div>
                     )}
 
-                    <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem', padding: '1rem', background: 'var(--surface-default)', borderRadius: '6px', border: '1px solid var(--panel-border)' }}>
+                    <div 
+                      className="form-group" 
+                      style={{ 
+                        marginTop: '0.5rem', 
+                        marginBottom: '1.5rem', 
+                        padding: '1rem', 
+                        background: 'var(--surface-default)', 
+                        borderRadius: '6px', 
+                        border: '1px solid var(--panel-border)',
+                        opacity: calculationType === 'fixed' ? 0.5 : 1,
+                        pointerEvents: calculationType === 'fixed' ? 'none' : 'auto',
+                        transition: 'opacity 0.2s'
+                      }}
+                    >
                       <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Incidência sobre Verbas Variáveis</label>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div
@@ -955,7 +971,7 @@ function App() {
                   const isExpanded = expandedServers.includes(servidor);
                   const cpf = penhoras[0].cpf;
                   return (
-                    <div key={servidor} className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <div key={servidor} className="card" style={{ padding: 0, border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                       {/* Server Header */}
                       <div
                         style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'white' }}
@@ -1013,7 +1029,8 @@ function App() {
                             </div>
                           </div>
 
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                          <div className="table-responsive-container">
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                             <thead>
                               <tr style={{ background: 'white', borderBottom: '1px solid #F1F5F9', textAlign: 'left' }}>
                                 <th style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#475569' }}>Processo</th>
@@ -1087,7 +1104,7 @@ function App() {
                                       </button>
 
                                       {openDropdownId === item.id && (
-                                        <div className="action-dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 10, minWidth: '130px', display: 'flex', flexDirection: 'column', border: '1px solid #E2E8F0', padding: '4px 0' }}>
+                                        <div className="action-dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 50, minWidth: '130px', display: 'flex', flexDirection: 'column', border: '1px solid #E2E8F0', padding: '4px 0' }}>
                                           <button 
                                             className="dropdown-item" 
                                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
@@ -1097,24 +1114,6 @@ function App() {
                                           >
                                             <Pencil size={14} color="#64748B" /> Editar
                                           </button>
-                                          <button 
-                                            className="dropdown-item" 
-                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
-                                            onClick={(e) => { e.stopPropagation(); alert('Duplicar não implementado'); setOpenDropdownId(null); }}
-                                            onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
-                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                                          >
-                                            <Copy size={14} color="#64748B" /> Duplicar
-                                          </button>
-                                          <button 
-                                            className="dropdown-item text-danger" 
-                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
-                                            onClick={(e) => { e.stopPropagation(); alert('Excluir não implementado'); setOpenDropdownId(null); }}
-                                            onMouseOver={(e) => e.currentTarget.style.background = '#FEE2E2'}
-                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                                          >
-                                            <Trash2 size={14} color="#EF4444" /> Excluir
-                                          </button>
                                         </div>
                                       )}
                                     </div>
@@ -1123,6 +1122,7 @@ function App() {
                               ))}
                             </tbody>
                           </table>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1149,7 +1149,7 @@ function App() {
                 Detalhes da Penhora Judicial
               </h2>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+              <div className="modal-grid">
                 <div>
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Dados do Processo</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -1163,7 +1163,7 @@ function App() {
                       <div style={{ fontWeight: 600 }}>{viewingPenhora.processo}</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{viewingPenhora.vara}</div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
+                    <div className="modal-inner-grid">
                       <div>
                         <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>DATA INÍCIO</label>
                         <div style={{ fontWeight: 600 }}>{viewingPenhora.dataInicio}</div>
