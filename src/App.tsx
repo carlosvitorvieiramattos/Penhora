@@ -537,31 +537,15 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label className="form-label">Número do Processo</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="0000000-00.0000.0.00.0000"
-                          value={numeroProcesso}
-                          onChange={(e) => setNumeroProcesso(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group" style={{ maxWidth: '160px' }}>
-                        <label className="form-label">Ordem de Implantação</label>
-                        <input
-                          type="number"
-                          className="form-input"
-                          min={1}
-                          value={ordemImplantacao}
-                          onChange={(e) => setOrdemImplantacao(Number(e.target.value))}
-                          style={{ textAlign: 'center', fontWeight: 700, fontSize: '1.1rem' }}
-                        />
-                        <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
-                          Prioridade na fila de descontos
-                        </small>
-                      </div>
+                    <div className="form-group">
+                      <label className="form-label">Número do Processo</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="0000000-00.0000.0.00.0000"
+                        value={numeroProcesso}
+                        onChange={(e) => setNumeroProcesso(e.target.value)}
+                      />
                     </div>
 
                     <div className="form-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr' }}>
