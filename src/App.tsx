@@ -1443,7 +1443,7 @@ function App() {
 
                   {/* Histórico de Ações */}
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem', marginBottom: '1rem' }}>Histórico de Ações</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="history-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {(viewingPenhora.history || []).slice().reverse().map((entry, idx, arr) => (
                       <div key={entry.id} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
