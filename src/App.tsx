@@ -1676,6 +1676,10 @@ function App() {
                         setStatus('Quitado');
                       }
                       setShowPayoffModal(false);
+                      // Disparar o salvamento automático para registrar a ação
+                      setTimeout(() => {
+                        handleSave();
+                      }, 100);
                     }}
                   >
                     Confirmar Alteração
