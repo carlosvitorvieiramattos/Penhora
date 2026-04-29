@@ -135,6 +135,7 @@ function App() {
   const [payoffObservations, setPayoffObservations] = useState<string>('');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [incidenciaDropdownOpen, setIncidenciaDropdownOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdownId(null);
@@ -822,112 +823,143 @@ function App() {
                       </small>
                     </div>
 
-                    {/* Incidência em Folhas Especiais */}
-                    <div 
-                      className="form-group" 
-                      style={{ 
-                        marginTop: '0.5rem', 
-                        marginBottom: '1.5rem', 
-                        padding: '1rem', 
-                        background: 'var(--surface-default)', 
-                        borderRadius: '6px', 
-                        border: '1px solid var(--panel-border)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <label className="form-label" style={{ marginBottom: 0, display: 'block' }}>Incidência em Folhas Especiais</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const allSelected = incide13 && incideFerias && incideRescisao;
-                            setIncide13(!allSelected);
-                            setIncideFerias(!allSelected);
-                            setIncideRescisao(!allSelected);
+                    {/* Incidência em Folhas Especiais - Multiselect */}
+                    <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                      <label className="form-label">Incidência em Folhas Especiais</label>
+                      <div style={{ position: 'relative' }}>
+                        {/* Multiselect Input */}
+                        <div
+                          onClick={() => setIncidenciaDropdownOpen(!incidenciaDropdownOpen)}
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            minHeight: '42px',
+                            padding: '6px 36px 6px 10px',
+                            border: incidenciaDropdownOpen ? '2px solid var(--primary-color)' : '1px solid var(--panel-border)',
+                            borderRadius: '6px',
+                            background: 'white',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.15s'
                           }}
-                          style={{ background: 'none', border: 'none', color: 'var(--primary-color)', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, padding: '2px 6px', borderRadius: '4px' }}
-                          onMouseOver={(e) => e.currentTarget.style.background = '#EFF6FF'}
-                          onMouseOut={(e) => e.currentTarget.style.background = 'none'}
                         >
-                          {incide13 && incideFerias && incideRescisao ? 'Desmarcar Todos' : 'Selecionar Todos'}
-                        </button>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div
-                          className={`bond-item ${incide13 ? 'selected' : ''}`}
-                          onClick={() => setIncide13(!incide13)}
-                          style={{ padding: '0.5rem 0.75rem', position: 'relative' }}
-                        >
-                          <div className="checkbox-custom">
-                            {incide13 && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>13º Salário</div>
-                          </div>
-                        </div>
-
-                        <div
-                          className={`bond-item ${incideFerias ? 'selected' : ''}`}
-                          onClick={() => setIncideFerias(!incideFerias)}
-                          style={{ padding: '0.5rem 0.75rem', position: 'relative' }}
-                        >
-                          <div className="checkbox-custom">
-                            {incideFerias && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Férias + 1/3 Constitucional</div>
-                          </div>
-                        </div>
-
-                        <div
-                          className={`bond-item ${incideRescisao ? 'selected' : ''}`}
-                          onClick={() => setIncideRescisao(!incideRescisao)}
-                          style={{ padding: '0.5rem 0.75rem', position: 'relative' }}
-                        >
-                          <div className="checkbox-custom">
-                            {incideRescisao && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Rescisão</div>
-                          </div>
-                        </div>
-
-                        <div
-                          className={`bond-item ${incideOutrasVariaveis ? 'selected' : ''}`}
-                          onClick={() => setIncideOutrasVariaveis(!incideOutrasVariaveis)}
-                          style={{ padding: '0.5rem 0.75rem', position: 'relative' }}
-                        >
-                          <div className="checkbox-custom">
-                            {incideOutrasVariaveis && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Outras Verbas Variáveis</div>
-                          </div>
-                        </div>
-                        {incideOutrasVariaveis && (
-                          <div style={{ paddingLeft: '2.5rem' }}>
-                            <div style={{ position: 'relative', width: '100%' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={outrasVerbasVariaveis > 0 ? formatCurrencyInput(outrasVerbasVariaveis) : ''}
-                                onChange={e => setOutrasVerbasVariaveis(parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                                style={{ paddingLeft: '2.5rem', fontSize: '0.9rem' }}
+                          {/* Tags */}
+                          {incide13 && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #BFDBFE' }}>
+                              13º Salário
+                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncide13(false); }} />
+                            </span>
+                          )}
+                          {incideFerias && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #BFDBFE' }}>
+                              Férias + 1/3
+                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncideFerias(false); }} />
+                            </span>
+                          )}
+                          {incideRescisao && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #BFDBFE' }}>
+                              Rescisão
+                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncideRescisao(false); }} />
+                            </span>
+                          )}
+                          {incideOutrasVariaveis && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#FEF3C7', color: '#92400E', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #FDE68A' }}>
+                              Outras Variáveis
+                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncideOutrasVariaveis(false); }} />
+                            </span>
+                          )}
+                          {!incide13 && !incideFerias && !incideRescisao && !incideOutrasVariaveis && (
+                            <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Selecione as folhas...</span>
+                          )}
+                          {/* Clear All + Chevron */}
+                          <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {(incide13 || incideFerias || incideRescisao || incideOutrasVariaveis) && (
+                              <X
+                                size={14}
+                                style={{ cursor: 'pointer', color: '#94A3B8' }}
+                                onClick={(e) => { e.stopPropagation(); setIncide13(false); setIncideFerias(false); setIncideRescisao(false); setIncideOutrasVariaveis(false); }}
                               />
-                            </div>
-                            <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
-                              Valor conforme determinação judicial
-                            </small>
+                            )}
+                            <ChevronDown size={16} style={{ color: '#94A3B8', transform: incidenciaDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
+                          </div>
+                        </div>
+
+                        {/* Dropdown Options */}
+                        {incidenciaDropdownOpen && (
+                          <div style={{
+                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px',
+                            background: 'white', border: '1px solid var(--panel-border)', borderRadius: '6px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, overflow: 'hidden'
+                          }}>
+                            {[
+                              { label: '13º Salário', checked: incide13, toggle: () => setIncide13(!incide13) },
+                              { label: 'Férias + 1/3 Constitucional', checked: incideFerias, toggle: () => setIncideFerias(!incideFerias) },
+                              { label: 'Rescisão', checked: incideRescisao, toggle: () => setIncideRescisao(!incideRescisao) },
+                              { label: 'Outras Verbas Variáveis', checked: incideOutrasVariaveis, toggle: () => setIncideOutrasVariaveis(!incideOutrasVariaveis) },
+                            ].map((opt, i) => (
+                              <div
+                                key={i}
+                                onClick={(e) => { e.stopPropagation(); opt.toggle(); }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem',
+                                  cursor: 'pointer', fontSize: '0.82rem', fontWeight: opt.checked ? 600 : 400,
+                                  background: opt.checked ? '#F0F9FF' : 'white', color: '#1E293B',
+                                  borderBottom: i < 3 ? '1px solid #F1F5F9' : 'none',
+                                  transition: 'background 0.1s'
+                                }}
+                                onMouseOver={(e) => { if (!opt.checked) e.currentTarget.style.background = '#F8FAFC'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = opt.checked ? '#F0F9FF' : 'white'; }}
+                              >
+                                <div style={{
+                                  width: '16px', height: '16px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  background: opt.checked ? 'var(--primary-color)' : 'white', border: opt.checked ? 'none' : '1.5px solid #CBD5E1',
+                                  transition: 'all 0.15s', flexShrink: 0
+                                }}>
+                                  {opt.checked && <Check size={11} color="white" />}
+                                </div>
+                                {opt.label}
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--panel-border)' }}>
-                        <div className="calc-row" style={{ padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Base de Origem:</span>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>R$ {totals.gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      {/* Outras Variáveis value input */}
+                      {incideOutrasVariaveis && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <div style={{ position: 'relative', width: '100%' }}>
+                            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
+                            <input
+                              type="text"
+                              className="form-input"
+                              value={outrasVerbasVariaveis > 0 ? formatCurrencyInput(outrasVerbasVariaveis) : ''}
+                              onChange={e => setOutrasVerbasVariaveis(parseCurrencyInput(e.target.value))}
+                              placeholder="0,00"
+                              style={{ paddingLeft: '2.5rem', fontSize: '0.9rem' }}
+                            />
+                          </div>
+                          <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
+                            Valor conforme determinação judicial
+                          </small>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Deduções e Resumo */}
+                    <div 
+                      className="form-group" 
+                      style={{ 
+                        padding: '1rem', 
+                        background: 'var(--surface-default)', 
+                        borderRadius: '6px', 
+                        border: '1px solid var(--panel-border)',
+                        marginBottom: '1rem'
+                      }}
+                    >
+                      <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Deduções Legais</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+
 
                         <div
                           className={`bond-item ${deductPrev ? 'selected' : ''}`}
