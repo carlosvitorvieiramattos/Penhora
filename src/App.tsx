@@ -94,6 +94,19 @@ const INITIAL_MOCK_PENHORAS: Penhora[] = [
   { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2, history: [{ id: 'h6', date: '10/04/2024 16:45', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
 ];
 
+const ALL_INCIDENTS = [
+  "ALIQUOTA_INSS", "ALIQUOTA_IRRF", "ALIQUOTA_MT_SAUDE", "ALIQUOTA_RPPS", "AVOS_13_SALARIO",
+  "BASE_FGTS", "BASE_INSS", "BASE_INSS_13", "BASE_IRRF", "BASE_IRRF_AJUSTADA", "BASE_IRRF_RRA",
+  "BASE_MT_SAUDE", "BASE_PENSAO", "BASE_PREVIDENCIA_PRIVADA", "BASE_PREVIDENCIA_RPPS",
+  "DEDUCAO_DEPENDENTE_VALOR", "DEDUCOES_LEGAIS", "DIAS_SALDO_SALARIO", "DIAS_TRABALHADOS",
+  "DIAS_UTEIS_MES", "HORAS_TRABALHADAS", "IDADE", "INDICADOR_MOLESTIA_GRAVE", "INDICE_RGA",
+  "JORNADA_MENSAL", "MESES_TRABALHADOS_ANO", "PARCELA_DEDUCAO", "PARCELA_DED_IRRF",
+  "PERC_PENSAO_ALIMENTICIA", "PERCENTUAL_RGA", "QTDE_DEPENDENTES_IRRF", "SALARIO_BASE",
+  "SALARIO_MINIMO", "SALARIO_SUBSTITUICAO", "TETO_RGPS", "TOTAL_PROVENTOS", "VALOR_ACAO_JUDICIAL",
+  "VALOR_EMPRESTIMO_CONSIGNADO", "VALOR_FIXO_PENSAO", "VALOR_FUNCAO_CONFIANCA_LC266",
+  "VALOR_ISENTO_65_ANOS", "VALOR_TETO_ESTADUAL"
+];
+
 const formatDateBR = (dateString: string) => {
   if (!dateString) return '-';
   if (dateString.includes('/')) return dateString; // Already in BR format
@@ -149,6 +162,9 @@ function App() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [incidenciaDropdownOpen, setIncidenciaDropdownOpen] = useState<boolean>(false);
+  const [incidentDropdownOpen, setIncidentDropdownOpen] = useState<boolean>(false);
+  const [selectedIncidents, setSelectedIncidents] = useState<string[]>([]);
+  const [incidentSearch, setIncidentSearch] = useState<string>('');
   const [selectedRubrics, setSelectedRubrics] = useState<string[]>(['1001', '1035', '1050']); // Padrão selecionado
   const [useSalarioMinimo, setUseSalarioMinimo] = useState<boolean>(false);
   const salarioMinimoValor = 1412.00;
@@ -947,8 +963,131 @@ function App() {
                               </div>
                             ))}
                           </div>
+                      </div>
+                    </div>
+
+                    {/* Variáveis e Bases Sistêmicas - Searchable Multiselect */}
+                    <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Variáveis e Bases Sistêmicas (Incidências)
+                        <span style={{ fontSize: '0.65rem', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px', color: '#64748B' }}>AVANÇADO</span>
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        {/* Multiselect Input */}
+                        <div
+                          onClick={() => setIncidentDropdownOpen(!incidentDropdownOpen)}
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            minHeight: '42px',
+                            padding: '6px 36px 6px 10px',
+                            border: incidentDropdownOpen ? '2px solid var(--primary-color)' : '1px solid var(--panel-border)',
+                            borderRadius: '6px',
+                            background: 'white',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.15s'
+                          }}
+                        >
+                          {/* Tags */}
+                          {selectedIncidents.length > 0 ? (
+                            selectedIncidents.map(inc => (
+                              <span key={inc} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#F1F5F9', color: '#475569', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, border: '1px solid #E2E8F0' }}>
+                                {inc}
+                                <X size={10} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setSelectedIncidents(prev => prev.filter(i => i !== inc)); }} />
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Selecione as variáveis sistêmicas...</span>
+                          )}
+                          
+                          {/* Clear All + Chevron */}
+                          <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {selectedIncidents.length > 0 && (
+                              <X
+                                size={14}
+                                style={{ cursor: 'pointer', color: '#94A3B8' }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedIncidents([]); }}
+                              />
+                            )}
+                            <ChevronDown size={16} style={{ color: '#94A3B8', transform: incidentDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
+                          </div>
+                        </div>
+
+                        {/* Dropdown Options with Search */}
+                        {incidentDropdownOpen && (
+                          <div style={{
+                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px',
+                            background: 'white', border: '1px solid var(--panel-border)', borderRadius: '8px',
+                            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', zIndex: 30, overflow: 'hidden'
+                          }}>
+                            {/* Search Box */}
+                            <div style={{ padding: '8px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
+                              <div style={{ position: 'relative' }}>
+                                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                                <input
+                                  type="text"
+                                  placeholder="Filtrar variáveis (ex: BASE, ALIQUOTA)..."
+                                  value={incidentSearch}
+                                  onChange={e => setIncidentSearch(e.target.value)}
+                                  onClick={e => e.stopPropagation()}
+                                  style={{
+                                    width: '100%',
+                                    padding: '6px 10px 6px 30px',
+                                    fontSize: '0.8rem',
+                                    border: '1px solid #E2E8F0',
+                                    borderRadius: '4px',
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s'
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Scrollable List */}
+                            <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="history-scroll">
+                              {ALL_INCIDENTS.filter(inc => inc.toLowerCase().includes(incidentSearch.toLowerCase())).map((inc) => {
+                                const isSelected = selectedIncidents.includes(inc);
+                                return (
+                                  <div
+                                    key={inc}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedIncidents(prev => 
+                                        isSelected ? prev.filter(item => item !== inc) : [...prev, inc]
+                                      );
+                                    }}
+                                    style={{
+                                      display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1rem',
+                                      cursor: 'pointer', fontSize: '0.75rem', fontWeight: isSelected ? 700 : 400,
+                                      background: isSelected ? '#F0F9FF' : 'white', color: isSelected ? 'var(--primary-color)' : '#1E293B',
+                                      borderBottom: '1px solid #F1F5F9', transition: 'all 0.1s'
+                                    }}
+                                    onMouseOver={(e) => { if (!isSelected) e.currentTarget.style.background = '#F8FAFC'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = isSelected ? '#F0F9FF' : 'white'; }}
+                                  >
+                                    <div style={{
+                                      width: '16px', height: '16px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      background: isSelected ? 'var(--primary-color)' : 'white', border: isSelected ? 'none' : '1.5px solid #CBD5E1',
+                                      transition: 'all 0.15s', flexShrink: 0
+                                    }}>
+                                      {isSelected && <Check size={11} color="white" />}
+                                    </div>
+                                    {inc}
+                                  </div>
+                                );
+                              })}
+                              {ALL_INCIDENTS.filter(inc => inc.toLowerCase().includes(incidentSearch.toLowerCase())).length === 0 && (
+                                <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94A3B8', fontSize: '0.8rem' }}>
+                                  Nenhuma variável encontrada para "{incidentSearch}"
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
+                    </div>
 
                       {/* Outras Variáveis value input */}
                       {incideOutrasVariaveis && (
