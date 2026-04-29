@@ -813,9 +813,9 @@ function App() {
 
 
 
-                    {/* Incidência em Folhas Especiais - Multiselect */}
+                    {/* Incidência em Folhas - Multiselect */}
                     <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-                      <label className="form-label">Incidência em Folhas Especiais</label>
+                      <label className="form-label">Incidência em Folhas</label>
                       <div style={{ position: 'relative' }}>
                         {/* Multiselect Input */}
                         <div
