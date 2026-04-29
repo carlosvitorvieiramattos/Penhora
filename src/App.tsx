@@ -603,34 +603,36 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="form-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
-                      <div className="form-group">
-                        <label className="form-label">Situação do Registro</label>
-                        <select 
-                          className="form-input" 
-                          value={status}
-                          onChange={(e) => setStatus(e.target.value)}
-                          style={{ background: 'white' }}
-                        >
-                          <option value="Ativo">🟢 Ativo (Em andamento)</option>
-                          <option value="Encerrado">⚪ Encerrado (Prazo concluído)</option>
-                          <option value="Quitado">✅ Quitado (Pagamento total)</option>
-                          <option value="Acordo Judicial">🤝 Acordo Judicial</option>
-                          <option value="Suspenso">🟠 Suspenso (Aguardando decisão)</option>
-                        </select>
+                    {editingPenhora && (
+                      <div className="form-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
+                        <div className="form-group">
+                          <label className="form-label">Situação do Registro</label>
+                          <select 
+                            className="form-input" 
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            style={{ background: 'white' }}
+                          >
+                            <option value="Ativo">🟢 Ativo (Em andamento)</option>
+                            <option value="Encerrado">⚪ Encerrado (Prazo concluído)</option>
+                            <option value="Quitado">✅ Quitado (Pagamento total)</option>
+                            <option value="Acordo Judicial">🤝 Acordo Judicial</option>
+                            <option value="Suspenso">🟠 Suspenso (Aguardando decisão)</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Observações Internas (Complementos)</label>
+                          <textarea 
+                            className="form-textarea" 
+                            rows={1} 
+                            placeholder="Ex: Acordo judicial realizado em audiência..." 
+                            style={{ height: '38px' }}
+                            value={payoffObservations}
+                            onChange={(e) => setPayoffObservations(e.target.value)}
+                          ></textarea>
+                        </div>
                       </div>
-                      <div className="form-group">
-                        <label className="form-label">Observações Internas (Complementos)</label>
-                        <textarea 
-                          className="form-textarea" 
-                          rows={1} 
-                          placeholder="Ex: Acordo judicial realizado em audiência..." 
-                          style={{ height: '38px' }}
-                          value={payoffObservations}
-                          onChange={(e) => setPayoffObservations(e.target.value)}
-                        ></textarea>
-                      </div>
-                    </div>
+                    )}
 
                     {editingPenhora && status === 'Inativo' && earlyPayoffValue > 0 && (
                       <div style={{ marginTop: '1rem', padding: '1rem', background: '#FEF2F2', borderRadius: '8px', border: '1px solid #FECACA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
