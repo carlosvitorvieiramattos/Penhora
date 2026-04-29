@@ -36,6 +36,15 @@ interface Bond {
   outrasPenhoras: number;
 }
 
+interface HistoryEntry {
+  id: string;
+  date: string;
+  status: string;
+  action: string;
+  observation: string;
+  value?: number;
+}
+
 interface Penhora {
   id: string;
   servidor: string;
@@ -53,6 +62,7 @@ interface Penhora {
   ordemImplantacao: number;
   sigaDoc?: string;
   observacoes?: string;
+  history: HistoryEntry[];
 }
 
 // Mock data for the user bonds
@@ -77,11 +87,11 @@ const parseCurrencyInput = (value: string) => {
 };
 
 const INITIAL_MOCK_PENHORAS: Penhora[] = [
-  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1 },
-  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1 },
-  { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1 },
-  { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1 },
-  { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2 },
+  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }] },
+  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
+  { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1, history: [{ id: 'h3', date: '10/10/2021 08:15', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }, { id: 'h4', date: '10/10/2023 18:00', status: 'Encerrado', action: 'Atualização de Status', observation: 'Processo encerrado por decurso de prazo.' }] },
+  { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h5', date: '01/03/2024 11:20', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
+  { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2, history: [{ id: 'h6', date: '10/04/2024 16:45', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
 ];
 
 const formatDateBR = (dateString: string) => {
@@ -179,8 +189,19 @@ function App() {
     
     setIsSaving(true);
     
+    const now = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
     // Simulate API call
     setTimeout(() => {
+      const historyEntry: HistoryEntry = {
+        id: Date.now().toString(),
+        date: now,
+        status: status,
+        action: editingPenhora ? 'Atualização de Dados' : 'Criação do Registro',
+        observation: payoffObservations || (editingPenhora ? 'Alteração dos parâmetros da penhora.' : 'Registro inicial da penhora judicial.'),
+        value: earlyPayoffValue > 0 ? earlyPayoffValue : undefined
+      };
+
       const newEntry: Penhora = {
         id: editingPenhora ? editingPenhora.id : (listPenhoras.length + 1).toString(),
         servidor: nomeServidor || (editingPenhora ? editingPenhora.servidor : 'Novo Servidor'),
@@ -197,7 +218,8 @@ function App() {
         totalDebt: totalDebt,
         ordemImplantacao: ordemImplantacao,
         sigaDoc: sigaDoc,
-        observacoes: payoffObservations
+        observacoes: payoffObservations,
+        history: editingPenhora ? [...(editingPenhora.history || []), historyEntry] : [historyEntry]
       };
 
       if (editingPenhora) {
@@ -1419,35 +1441,46 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Histórico e Observações */}
-                  <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem' }}>Histórico e Observações</h3>
-                  <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--primary-color)', border: '2px solid #DBEAFE' }}></div>
-                        <div style={{ width: '2px', flex: 1, background: '#E2E8F0', marginTop: '4px' }}></div>
+                  {/* Histórico de Ações */}
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem', marginBottom: '1rem' }}>Histórico de Ações</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {(viewingPenhora.history || []).slice().reverse().map((entry, idx, arr) => (
+                      <div key={entry.id} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ 
+                            width: '10px', 
+                            height: '10px', 
+                            borderRadius: '50%', 
+                            background: idx === 0 ? 'var(--primary-color)' : '#94A3B8',
+                            zIndex: 1,
+                            marginTop: '6px'
+                          }}></div>
+                          {idx < (arr.length - 1) && (
+                            <div style={{ width: '2px', flex: 1, background: '#E2E8F0', margin: '4px 0' }}></div>
+                          )}
+                        </div>
+                        <div style={{ background: '#F8FAFC', padding: '0.75rem', borderRadius: '8px', border: '1px solid #E2E8F0', flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E293B' }}>{entry.action}</span>
+                            <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>{entry.date}</span>
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: '#475569', lineHeight: '1.4' }}>
+                            {entry.observation}
+                          </div>
+                          {entry.value !== undefined && entry.value > 0 && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 600, marginTop: '0.25rem' }}>
+                              Valor da Operação: R$ {entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </div>
+                          )}
+                          <div style={{ fontSize: '0.65rem', color: '#94A3B8', marginTop: '0.25rem' }}>
+                            Situação no momento: <span style={{ fontWeight: 600, color: entry.status === 'Ativo' ? '#059669' : '#64748B' }}>{entry.status}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E293B' }}>SITUAÇÃO ATUAL: {viewingPenhora.status}</div>
-                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>Atualizado em: {new Date().toLocaleDateString('pt-BR')}</div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '4px' }}>OBSERVAÇÕES DO PROCESSO</label>
-                      <div style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#475569', 
-                        padding: '0.75rem', 
-                        background: '#F8FAFC', 
-                        borderRadius: '6px',
-                        border: '1px solid #F1F5F9',
-                        minHeight: '60px',
-                        lineHeight: '1.4'
-                      }}>
-                        {viewingPenhora.observacoes || "Nenhuma observação registrada para este processo judicial."}
-                      </div>
-                    </div>
+                    ))}
+                    {(viewingPenhora.history?.length || 0) === 0 && (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem' }}>Nenhum histórico registrado.</div>
+                    )}
                   </div>
                 </div>
 
