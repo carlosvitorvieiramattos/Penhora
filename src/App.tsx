@@ -49,6 +49,7 @@ interface Penhora {
   totalDebt: number;
   ordemImplantacao: number;
   sigaDoc?: string;
+  observacoes?: string;
 }
 
 // Mock data for the user bonds
@@ -126,10 +127,7 @@ function App() {
   const [numeroProcesso, setNumeroProcesso] = useState<string>('');
   const [sigaDoc, setSigaDoc] = useState<string>('');
   const [varaJudicial, setVaraJudicial] = useState<string>('');
-  const [dataInicioForm, setDataInicioForm] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  });
+  const [dataInicioForm, setDataInicioForm] = useState<string>('');
   const [dataTerminoForm, setDataTerminoForm] = useState<string>('');
   const [status, setStatus] = useState<string>('Ativo');
   const [earlyPayoffValue, setEarlyPayoffValue] = useState<number>(0);
@@ -138,6 +136,9 @@ function App() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [incidenciaDropdownOpen, setIncidenciaDropdownOpen] = useState<boolean>(false);
+  const [selectedRubrics, setSelectedRubrics] = useState<string[]>(['1001', '1035', '1050']); // Padrão selecionado
+  const [useSalarioMinimo, setUseSalarioMinimo] = useState<boolean>(false);
+  const salarioMinimoValor = 1412.00;
 
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdownId(null);
@@ -192,7 +193,8 @@ function App() {
         status: status,
         totalDebt: totalDebt,
         ordemImplantacao: ordemImplantacao,
-        sigaDoc: sigaDoc
+        sigaDoc: sigaDoc,
+        observacoes: payoffObservations
       };
 
       if (editingPenhora) {
@@ -235,6 +237,8 @@ function App() {
     setOutrasVerbasVariaveis(0);
     setOrdemImplantacao(1);
     setCalculationType('percentage_net');
+    setSelectedRubrics(['1001', '1035', '1050']);
+    setUseSalarioMinimo(false);
     setPercentage(30);
     setFixedValue(0);
     setTotalDebt(0);
@@ -246,6 +250,8 @@ function App() {
     setStatus('Ativo');
     setEarlyPayoffValue(0);
     setPayoffObservations('');
+    setSelectedRubrics(['1001', '1035', '1050']);
+    setUseSalarioMinimo(false);
     setEditingPenhora(null);
   };
 
@@ -256,6 +262,7 @@ function App() {
     setNumeroProcesso(penhora.processo);
     setSigaDoc(penhora.sigaDoc || '');
     setVaraJudicial(penhora.vara);
+    setPayoffObservations(penhora.observacoes || '');
 
     // Date conversion from DD/MM/YYYY to YYYY-MM-DD
     if (penhora.dataInicio && penhora.dataInicio.includes('/')) {
@@ -301,7 +308,7 @@ function App() {
   // Calculate totals based on selected bonds
   const totals = useMemo(() => {
     if (salaryMethod === 'manual') {
-      const gross = manualGross + outrasVerbasFixas;
+      const gross = useSalarioMinimo ? salarioMinimoValor : (manualGross + outrasVerbasFixas);
       const prev = manualPrev;
       const pensao = manualPensao;
       const irrf = manualIRRF;
@@ -320,7 +327,7 @@ function App() {
 
     const selected = mockBonds.filter(b => selectedBonds.includes(b.id));
     const baseGross = selected.reduce((sum, b) => sum + b.gross, 0);
-    const gross = baseGross + outrasVerbasFixas;
+    const gross = useSalarioMinimo ? salarioMinimoValor : (baseGross + outrasVerbasFixas);
     const prev = selected.reduce((sum, b) => sum + b.prev, 0);
     const pensao = selected.reduce((sum, b) => sum + b.pensao, 0);
     const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
@@ -344,7 +351,7 @@ function App() {
       - outrosVal;
 
     return { gross: finalGross, prev, pensao, irrf, outrasPenhoras, sindicato: sindicatoVal, outrosDescontos: outrosVal, net, baseDebt: totalDebt };
-  }, [selectedBonds, deductPrev, deductPensao, deductIRRF, deductOutras, salaryMethod, manualGross, manualPrev, manualPensao, manualIRRF, incide13, incideFerias, incideRescisao, totalDebt, outrasVerbasFixas, incideOutrasVariaveis, outrasVerbasVariaveis, deductSindicato, valorSindicato, deductOutrosDescontos, valorOutrosDescontos]);
+  }, [selectedBonds, deductPrev, deductPensao, deductIRRF, deductOutras, salaryMethod, manualGross, manualPrev, manualPensao, manualIRRF, incide13, incideFerias, incideRescisao, totalDebt, outrasVerbasFixas, incideOutrasVariaveis, outrasVerbasVariaveis, deductSindicato, valorSindicato, deductOutrosDescontos, valorOutrosDescontos, useSalarioMinimo]);
 
   // Calculate final discount
   const finalDiscount = useMemo(() => {
@@ -596,40 +603,34 @@ function App() {
                       </div>
                     </div>
 
-                    {editingPenhora && (
-                      <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                        <div className="form-group">
-                          <label className="form-label">Situação do Registro</label>
-                          <select 
-                            className="form-input" 
-                            value={status}
-                            onChange={(e) => {
-                              const newStatus = e.target.value;
-                              setStatus(newStatus);
-                              if (newStatus === 'Inativo') {
-                                setShowPayoffModal(true);
-                              }
-                            }}
-                            style={{ background: 'white' }}
-                          >
-                            <option value="Ativo">🟢 Ativo (Em andamento)</option>
-                            <option value="Encerrado">⚪ Encerrado (Prazo concluído)</option>
-                            <option value="Inativo">🔴 Inativo (Quitação Antecipada / Adiantado)</option>
-                          </select>
-                        </div>
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="form-label">Observações Internas (Somente sistema)</label>
-                          <textarea 
-                            className="form-textarea" 
-                            rows={1} 
-                            placeholder="Detalhes adicionais..." 
-                            style={{ height: '38px' }}
-                            value={payoffObservations}
-                            onChange={(e) => setPayoffObservations(e.target.value)}
-                          ></textarea>
-                        </div>
+                    <div className="form-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
+                      <div className="form-group">
+                        <label className="form-label">Situação do Registro</label>
+                        <select 
+                          className="form-input" 
+                          value={status}
+                          onChange={(e) => setStatus(e.target.value)}
+                          style={{ background: 'white' }}
+                        >
+                          <option value="Ativo">🟢 Ativo (Em andamento)</option>
+                          <option value="Encerrado">⚪ Encerrado (Prazo concluído)</option>
+                          <option value="Quitado">✅ Quitado (Pagamento total)</option>
+                          <option value="Acordo Judicial">🤝 Acordo Judicial</option>
+                          <option value="Suspenso">🟠 Suspenso (Aguardando decisão)</option>
+                        </select>
                       </div>
-                    )}
+                      <div className="form-group">
+                        <label className="form-label">Observações Internas (Complementos)</label>
+                        <textarea 
+                          className="form-textarea" 
+                          rows={1} 
+                          placeholder="Ex: Acordo judicial realizado em audiência..." 
+                          style={{ height: '38px' }}
+                          value={payoffObservations}
+                          onChange={(e) => setPayoffObservations(e.target.value)}
+                        ></textarea>
+                      </div>
+                    </div>
 
                     {editingPenhora && status === 'Inativo' && earlyPayoffValue > 0 && (
                       <div style={{ marginTop: '1rem', padding: '1rem', background: '#FEF2F2', borderRadius: '8px', border: '1px solid #FECACA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -721,6 +722,70 @@ function App() {
                         <RotateCcw size={12} />
                         Limpar
                       </button>
+                    </div>
+
+
+                    {/* Base de Origem (Rubricas) */}
+                    <div className="form-group" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#F1F5F9', borderRadius: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <label className="form-label" style={{ marginBottom: 0 }}>Base de Origem (Rubricas)</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                           <button 
+                            className="btn btn-secondary" 
+                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
+                            onClick={() => setSelectedRubrics(['1001', '1020', '1035', '1050', '1100'])}
+                          >
+                            Marcar Todas
+                          </button>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
+                            onClick={() => setSelectedRubrics([])}
+                          >
+                            Limpar
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                        {[
+                          { id: '1001', name: 'Vencimento Básico' },
+                          { id: '1020', name: 'Insalubridade' },
+                          { id: '1035', name: 'Gratificação' },
+                          { id: '1050', name: 'Função Comiss.' },
+                          { id: '1100', name: 'Triênios/Anuênio' },
+                        ].map(rubric => (
+                          <div 
+                            key={rubric.id} 
+                            className={`bond-item ${selectedRubrics.includes(rubric.id) ? 'selected' : ''}`}
+                            onClick={() => {
+                              setSelectedRubrics(prev => 
+                                prev.includes(rubric.id) ? prev.filter(r => r !== rubric.id) : [...prev, rubric.id]
+                              );
+                            }}
+                            style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
+                          >
+                            <div className="checkbox-custom" style={{ width: '14px', height: '14px' }}>
+                              {selectedRubrics.includes(rubric.id) && <Check size={10} color="white" />}
+                            </div>
+                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rubric.name}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div 
+                        className={`bond-item ${useSalarioMinimo ? 'selected' : ''}`}
+                        onClick={() => setUseSalarioMinimo(!useSalarioMinimo)}
+                        style={{ padding: '0.5rem', border: '1px solid #CBD5E1', background: useSalarioMinimo ? '#EFF6FF' : 'white' }}
+                      >
+                        <div className="checkbox-custom" style={{ width: '16px', height: '16px' }}>
+                          {useSalarioMinimo && <Check size={12} color="white" />}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>Usar Salário Mínimo como Base</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 700 }}>R$ 1.412,00</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="form-group">
