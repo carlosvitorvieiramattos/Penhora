@@ -48,6 +48,7 @@ interface Penhora {
   vara: string;
   totalDebt: number;
   ordemImplantacao: number;
+  sigaDoc?: string;
 }
 
 // Mock data for the user bonds
@@ -123,6 +124,7 @@ function App() {
   const [totalDebt, setTotalDebt] = useState<number>(0);
   const [nomeServidor, setNomeServidor] = useState<string>('');
   const [numeroProcesso, setNumeroProcesso] = useState<string>('');
+  const [sigaDoc, setSigaDoc] = useState<string>('');
   const [varaJudicial, setVaraJudicial] = useState<string>('');
   const [dataInicioForm, setDataInicioForm] = useState<string>(() => {
     const d = new Date();
@@ -189,7 +191,8 @@ function App() {
         dataTermino: dataTerminoForm,
         status: status,
         totalDebt: totalDebt,
-        ordemImplantacao: ordemImplantacao
+        ordemImplantacao: ordemImplantacao,
+        sigaDoc: sigaDoc
       };
 
       if (editingPenhora) {
@@ -237,6 +240,7 @@ function App() {
     setTotalDebt(0);
     setNomeServidor('');
     setNumeroProcesso('');
+    setSigaDoc('');
     setVaraJudicial('');
     setDataTerminoForm('');
     setStatus('Ativo');
@@ -250,6 +254,7 @@ function App() {
     setCpfServidor(penhora.cpf);
     setNomeServidor(penhora.servidor);
     setNumeroProcesso(penhora.processo);
+    setSigaDoc(penhora.sigaDoc || '');
     setVaraJudicial(penhora.vara);
 
     // Date conversion from DD/MM/YYYY to YYYY-MM-DD
@@ -537,15 +542,27 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Número do Processo</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="0000000-00.0000.0.00.0000"
-                        value={numeroProcesso}
-                        onChange={(e) => setNumeroProcesso(e.target.value)}
-                      />
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Número do Processo</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="0000000-00.0000.0.00.0000"
+                          value={numeroProcesso}
+                          onChange={(e) => setNumeroProcesso(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">SigaDoc</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Ex: SEFAZ-PRO-2024/00001"
+                          value={sigaDoc}
+                          onChange={(e) => setSigaDoc(e.target.value)}
+                        />
+                      </div>
                     </div>
 
                     <div className="form-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr' }}>
