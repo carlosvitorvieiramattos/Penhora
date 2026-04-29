@@ -725,68 +725,7 @@ function App() {
                     </div>
 
 
-                    {/* Base de Origem (Rubricas) */}
-                    <div className="form-group" style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#F1F5F9', borderRadius: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <label className="form-label" style={{ marginBottom: 0 }}>Base de Origem (Rubricas)</label>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                           <button 
-                            className="btn btn-secondary" 
-                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
-                            onClick={() => setSelectedRubrics(['1001', '1020', '1035', '1050', '1100'])}
-                          >
-                            Marcar Todas
-                          </button>
-                          <button 
-                            className="btn btn-secondary" 
-                            style={{ fontSize: '0.65rem', padding: '2px 6px' }}
-                            onClick={() => setSelectedRubrics([])}
-                          >
-                            Limpar
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '0.75rem' }}>
-                        {[
-                          { id: '1001', name: 'Vencimento Básico' },
-                          { id: '1020', name: 'Insalubridade' },
-                          { id: '1035', name: 'Gratificação' },
-                          { id: '1050', name: 'Função Comiss.' },
-                          { id: '1100', name: 'Triênios/Anuênio' },
-                        ].map(rubric => (
-                          <div 
-                            key={rubric.id} 
-                            className={`bond-item ${selectedRubrics.includes(rubric.id) ? 'selected' : ''}`}
-                            onClick={() => {
-                              setSelectedRubrics(prev => 
-                                prev.includes(rubric.id) ? prev.filter(r => r !== rubric.id) : [...prev, rubric.id]
-                              );
-                            }}
-                            style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem' }}
-                          >
-                            <div className="checkbox-custom" style={{ width: '14px', height: '14px' }}>
-                              {selectedRubrics.includes(rubric.id) && <Check size={10} color="white" />}
-                            </div>
-                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rubric.name}</span>
-                          </div>
-                        ))}
-                      </div>
 
-                      <div 
-                        className={`bond-item ${useSalarioMinimo ? 'selected' : ''}`}
-                        onClick={() => setUseSalarioMinimo(!useSalarioMinimo)}
-                        style={{ padding: '0.5rem', border: '1px solid #CBD5E1', background: useSalarioMinimo ? '#EFF6FF' : 'white' }}
-                      >
-                        <div className="checkbox-custom" style={{ width: '16px', height: '16px' }}>
-                          {useSalarioMinimo && <Check size={12} color="white" />}
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                          <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>Usar Salário Mínimo como Base</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--primary-color)', fontWeight: 700 }}>R$ 1.412,00</span>
-                        </div>
-                      </div>
-                    </div>
 
                     <div className="form-group">
                       <label className="form-label">Tipo de Cálculo</label>
@@ -870,24 +809,7 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Outras Verbas Fixas */}
-                    <div className="form-group" style={{ marginTop: '0.25rem' }}>
-                      <label className="form-label">Outras Verbas Fixas (R$)</label>
-                      <div style={{ position: 'relative', width: '100%' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={outrasVerbasFixas > 0 ? formatCurrencyInput(outrasVerbasFixas) : ''}
-                          onChange={e => setOutrasVerbasFixas(parseCurrencyInput(e.target.value))}
-                          placeholder="0,00"
-                          style={{ paddingLeft: '2.5rem' }}
-                        />
-                      </div>
-                      <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
-                        Funções Comissionadas, Gratificações, Adicionais (Insalubridade, etc.)
-                      </small>
-                    </div>
+
 
                     {/* Incidência em Folhas Especiais - Multiselect */}
                     <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
