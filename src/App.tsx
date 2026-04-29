@@ -47,6 +47,7 @@ interface Penhora {
   status: string;
   vara: string;
   totalDebt: number;
+  ordemImplantacao: number;
 }
 
 // Mock data for the user bonds
@@ -71,11 +72,11 @@ const parseCurrencyInput = (value: string) => {
 };
 
 const INITIAL_MOCK_PENHORAS: Penhora[] = [
-  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000 },
-  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0 },
-  { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000 },
-  { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0 },
-  { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500 },
+  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1 },
+  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1 },
+  { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1 },
+  { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1 },
+  { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2 },
 ];
 
 const formatDateBR = (dateString: string) => {
@@ -88,16 +89,25 @@ const formatDateBR = (dateString: string) => {
 
 function App() {
   const [selectedBonds, setSelectedBonds] = useState<string[]>(['1']);
-  const [calculationType, setCalculationType] = useState('percentage');
+  const [calculationType, setCalculationType] = useState<'percentage_gross' | 'percentage_net' | 'fixed'>('percentage_net');
   const [cpfServidor, setCpfServidor] = useState<string>('');
   const [percentage, setPercentage] = useState<number>(30);
   const [fixedValue, setFixedValue] = useState<number>(0);
   const [incide13, setIncide13] = useState<boolean>(true);
   const [incideFerias, setIncideFerias] = useState<boolean>(true);
+  const [incideRescisao, setIncideRescisao] = useState<boolean>(false);
   const [deductPrev, setDeductPrev] = useState<boolean>(true);
   const [deductIRRF, setDeductIRRF] = useState<boolean>(true);
   const [deductOutras, setDeductOutras] = useState<boolean>(true);
   const [deductPensao, setDeductPensao] = useState<boolean>(true);
+  const [deductSindicato, setDeductSindicato] = useState<boolean>(false);
+  const [valorSindicato, setValorSindicato] = useState<number>(0);
+  const [deductOutrosDescontos, setDeductOutrosDescontos] = useState<boolean>(false);
+  const [valorOutrosDescontos, setValorOutrosDescontos] = useState<number>(0);
+  const [outrasVerbasFixas, setOutrasVerbasFixas] = useState<number>(0);
+  const [incideOutrasVariaveis, setIncideOutrasVariaveis] = useState<boolean>(false);
+  const [outrasVerbasVariaveis, setOutrasVerbasVariaveis] = useState<number>(0);
+  const [ordemImplantacao, setOrdemImplantacao] = useState<number>(1);
   const [activeScreen, setActiveScreen] = useState<'form' | 'list'>('list');
   const [editingPenhora, setEditingPenhora] = useState<Penhora | null>(null);
   const [viewingPenhora, setViewingPenhora] = useState<Penhora | null>(null);
@@ -171,13 +181,14 @@ function App() {
         matricula: editingPenhora ? editingPenhora.matricula : '1000' + (listPenhoras.length + 1),
         processo: numeroProcesso,
         vara: varaJudicial,
-        valor: calculationType === 'percentage' ? `${percentage}%` : `R$ ${fixedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-        tipo: calculationType === 'percentage' ? 'Porcentagem' : 'Fixo',
-        base: calculationType === 'percentage' ? 'Líquido' : '-',
+        valor: calculationType !== 'fixed' ? `${percentage}%` : `R$ ${fixedValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        tipo: calculationType !== 'fixed' ? 'Porcentagem' : 'Fixo',
+        base: calculationType === 'percentage_gross' ? 'Bruto' : calculationType === 'percentage_net' ? 'Líquido' : '-',
         dataInicio: dataInicioForm,
         dataTermino: dataTerminoForm,
         status: status,
-        totalDebt: totalDebt
+        totalDebt: totalDebt,
+        ordemImplantacao: ordemImplantacao
       };
 
       if (editingPenhora) {
@@ -206,11 +217,20 @@ function App() {
     setSelectedBonds([]);
     setIncide13(true);
     setIncideFerias(true);
+    setIncideRescisao(false);
     setDeductPrev(true);
     setDeductIRRF(true);
     setDeductOutras(true);
     setDeductPensao(true);
-    setCalculationType('percentage');
+    setDeductSindicato(false);
+    setValorSindicato(0);
+    setDeductOutrosDescontos(false);
+    setValorOutrosDescontos(0);
+    setOutrasVerbasFixas(0);
+    setIncideOutrasVariaveis(false);
+    setOutrasVerbasVariaveis(0);
+    setOrdemImplantacao(1);
+    setCalculationType('percentage_net');
     setPercentage(30);
     setFixedValue(0);
     setTotalDebt(0);
@@ -243,7 +263,11 @@ function App() {
     }
 
     const isPercentage = penhora.tipo === 'Porcentagem';
-    setCalculationType(isPercentage ? 'percentage' : 'fixed');
+    if (isPercentage) {
+      setCalculationType(penhora.base === 'Bruto' ? 'percentage_gross' : 'percentage_net');
+    } else {
+      setCalculationType('fixed');
+    }
 
     if (isPercentage) {
       setPercentage(parseFloat(penhora.valor.replace('%', '')) || 0);
@@ -253,6 +277,7 @@ function App() {
     }
 
     setTotalDebt(penhora.totalDebt || 0);
+    setOrdemImplantacao(penhora.ordemImplantacao || 1);
     setStatus(penhora.status || 'Ativo');
     setSelectedBonds(['1']); // Pre-select a bond to show calculation result
 
@@ -270,7 +295,7 @@ function App() {
   // Calculate totals based on selected bonds
   const totals = useMemo(() => {
     if (salaryMethod === 'manual') {
-      const gross = manualGross;
+      const gross = manualGross + outrasVerbasFixas;
       const prev = manualPrev;
       const pensao = manualPensao;
       const irrf = manualIRRF;
@@ -278,13 +303,18 @@ function App() {
       let finalGross = gross;
       if (incide13) finalGross += gross;
       if (incideFerias) finalGross += (gross * 1.3333);
+      if (incideRescisao) finalGross += gross;
+      if (incideOutrasVariaveis) finalGross += outrasVerbasVariaveis;
 
-      const net = finalGross - (deductPrev ? prev : 0) - (deductPensao ? pensao : 0) - (deductIRRF ? irrf : 0);
-      return { gross: finalGross, prev, pensao, irrf, outrasPenhoras: 0, net };
+      const sindicatoVal = deductSindicato ? valorSindicato : 0;
+      const outrosVal = deductOutrosDescontos ? valorOutrosDescontos : 0;
+      const net = finalGross - (deductPrev ? prev : 0) - (deductPensao ? pensao : 0) - (deductIRRF ? irrf : 0) - sindicatoVal - outrosVal;
+      return { gross: finalGross, prev, pensao, irrf, outrasPenhoras: 0, sindicato: sindicatoVal, outrosDescontos: outrosVal, net };
     }
 
     const selected = mockBonds.filter(b => selectedBonds.includes(b.id));
-    const gross = selected.reduce((sum, b) => sum + b.gross, 0);
+    const baseGross = selected.reduce((sum, b) => sum + b.gross, 0);
+    const gross = baseGross + outrasVerbasFixas;
     const prev = selected.reduce((sum, b) => sum + b.prev, 0);
     const pensao = selected.reduce((sum, b) => sum + b.pensao, 0);
     const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
@@ -294,19 +324,28 @@ function App() {
     let finalGross = gross;
     if (incide13) finalGross += gross;
     if (incideFerias) finalGross += (gross * 1.3333);
+    if (incideRescisao) finalGross += gross;
+    if (incideOutrasVariaveis) finalGross += outrasVerbasVariaveis;
 
+    const sindicatoVal = deductSindicato ? valorSindicato : 0;
+    const outrosVal = deductOutrosDescontos ? valorOutrosDescontos : 0;
     const net = finalGross
       - (deductPrev ? prev : 0)
       - (deductPensao ? pensao : 0)
       - (deductIRRF ? irrf : 0)
-      - (deductOutras ? outrasPenhoras : 0);
+      - (deductOutras ? outrasPenhoras : 0)
+      - sindicatoVal
+      - outrosVal;
 
-    return { gross: finalGross, prev, pensao, irrf, outrasPenhoras, net, baseDebt: totalDebt };
-  }, [selectedBonds, deductPrev, deductPensao, deductIRRF, deductOutras, salaryMethod, manualGross, manualPrev, manualPensao, manualIRRF, incide13, incideFerias, totalDebt]);
+    return { gross: finalGross, prev, pensao, irrf, outrasPenhoras, sindicato: sindicatoVal, outrosDescontos: outrosVal, net, baseDebt: totalDebt };
+  }, [selectedBonds, deductPrev, deductPensao, deductIRRF, deductOutras, salaryMethod, manualGross, manualPrev, manualPensao, manualIRRF, incide13, incideFerias, incideRescisao, totalDebt, outrasVerbasFixas, incideOutrasVariaveis, outrasVerbasVariaveis, deductSindicato, valorSindicato, deductOutrosDescontos, valorOutrosDescontos]);
 
   // Calculate final discount
   const finalDiscount = useMemo(() => {
-    if (calculationType === 'percentage') {
+    if (calculationType === 'percentage_gross') {
+      return (totals.gross * (percentage / 100));
+    }
+    if (calculationType === 'percentage_net') {
       return (totals.net * (percentage / 100));
     }
     return fixedValue;
@@ -497,15 +536,31 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Número do Processo</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="0000000-00.0000.0.00.0000"
-                        value={numeroProcesso}
-                        onChange={(e) => setNumeroProcesso(e.target.value)}
-                      />
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Número do Processo</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="0000000-00.0000.0.00.0000"
+                          value={numeroProcesso}
+                          onChange={(e) => setNumeroProcesso(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group" style={{ maxWidth: '160px' }}>
+                        <label className="form-label">Ordem de Implantação</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          min={1}
+                          value={ordemImplantacao}
+                          onChange={(e) => setOrdemImplantacao(Number(e.target.value))}
+                          style={{ textAlign: 'center', fontWeight: 700, fontSize: '1.1rem' }}
+                        />
+                        <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
+                          Prioridade na fila de descontos
+                        </small>
+                      </div>
                     </div>
 
                     <div className="form-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr' }}>
@@ -668,17 +723,24 @@ function App() {
 
                     <div className="form-group">
                       <label className="form-label">Tipo de Cálculo</label>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                      <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.25rem' }}>
                         <button
-                          className={`btn ${calculationType === 'percentage' ? 'btn-primary' : 'btn-secondary'}`}
-                          style={{ flex: 1 }}
-                          onClick={() => setCalculationType('percentage')}
+                          className={`btn ${calculationType === 'percentage_gross' ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{ flex: 1, fontSize: '0.78rem', padding: '0.5rem 0.25rem' }}
+                          onClick={() => setCalculationType('percentage_gross')}
                         >
-                          Porcentagem (%)
+                          % do Bruto
+                        </button>
+                        <button
+                          className={`btn ${calculationType === 'percentage_net' ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{ flex: 1, fontSize: '0.78rem', padding: '0.5rem 0.25rem' }}
+                          onClick={() => setCalculationType('percentage_net')}
+                        >
+                          % do Líquido
                         </button>
                         <button
                           className={`btn ${calculationType === 'fixed' ? 'btn-primary' : 'btn-secondary'}`}
-                          style={{ flex: 1 }}
+                          style={{ flex: 1, fontSize: '0.78rem', padding: '0.5rem 0.25rem' }}
                           onClick={() => setCalculationType('fixed')}
                         >
                           Valor Fixo
@@ -686,32 +748,30 @@ function App() {
                       </div>
                     </div>
 
-                    {calculationType === 'percentage' ? (
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label className="form-label">
-                            Valor Total da Dívida (R$) <span style={{ color: 'var(--danger-color)' }}>*</span>
-                          </label>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <div style={{ position: 'relative', width: '100%' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={totalDebt > 0 ? formatCurrencyInput(totalDebt) : ''}
-                                onChange={e => setTotalDebt(parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                                style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1E293B', paddingLeft: '2.5rem' }}
-                              />
-                            </div>
-                          </div>
-                          <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.35rem', display: 'block' }}>
-                            Este valor será usado para calcular a duração da penhora.
-                          </small>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">
+                          Valor Total da Dívida (R$) <span style={{ color: 'var(--danger-color)' }}>*</span>
+                        </label>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={totalDebt > 0 ? formatCurrencyInput(totalDebt) : ''}
+                            onChange={e => setTotalDebt(parseCurrencyInput(e.target.value))}
+                            placeholder="0,00"
+                            style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1E293B', paddingLeft: '2.5rem' }}
+                          />
                         </div>
-                        <div className="form-group">
-                          <label className="form-label">Percentual do Ofício (%)</label>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.35rem', display: 'block' }}>
+                          Este valor será usado para calcular a duração da penhora.
+                        </small>
+                      </div>
+                      <div className="form-group">
+                        {calculationType !== 'fixed' ? (
+                          <>
+                            <label className="form-label">Percentual do Ofício (%)</label>
                             <input
                               type="number"
                               className="form-input"
@@ -720,52 +780,49 @@ function App() {
                               min="1" max="100"
                               style={{ fontSize: '1.2rem', fontWeight: 'bold' }}
                             />
-                          </div>
-                          <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.35rem', display: 'block' }}>
-                            O sistema vinculas esse percentual base à Rubrica 8014.
-                          </small>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label className="form-label">
-                            Valor Total da Dívida (R$) <span style={{ color: 'var(--danger-color)' }}>*</span>
-                          </label>
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.35rem', display: 'block' }}>
+                              Incide sobre {calculationType === 'percentage_gross' ? 'o Bruto' : 'o Líquido'}.
+                            </small>
+                          </>
+                        ) : (
+                          <>
+                            <label className="form-label">Valor Fixo da Parcela (R$)</label>
                             <div style={{ position: 'relative', width: '100%' }}>
                               <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
                               <input
                                 type="text"
                                 className="form-input"
-                                value={totalDebt > 0 ? formatCurrencyInput(totalDebt) : ''}
-                                onChange={e => setTotalDebt(parseCurrencyInput(e.target.value))}
+                                value={fixedValue > 0 ? formatCurrencyInput(fixedValue) : ''}
+                                onChange={e => setFixedValue(parseCurrencyInput(e.target.value))}
                                 placeholder="0,00"
-                                style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1E293B', paddingLeft: '2.5rem' }}
+                                style={{ fontSize: '1.2rem', fontWeight: 'bold', paddingLeft: '2.5rem' }}
                               />
                             </div>
-                          </div>
-                          <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.35rem', display: 'block' }}>
-                            Este valor será usado para calcular a duração da penhora.
-                          </small>
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Valor Fixo da Parcela (R$)</label>
-                          <div style={{ position: 'relative', width: '100%' }}>
-                            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                            <input
-                              type="text"
-                              className="form-input"
-                              value={fixedValue > 0 ? formatCurrencyInput(fixedValue) : ''}
-                              onChange={e => setFixedValue(parseCurrencyInput(e.target.value))}
-                              placeholder="0,00"
-                              style={{ fontSize: '1.2rem', fontWeight: 'bold', paddingLeft: '2.5rem' }}
-                            />
-                          </div>
-                        </div>
+                          </>
+                        )}
                       </div>
-                    )}
+                    </div>
 
+                    {/* Outras Verbas Fixas */}
+                    <div className="form-group" style={{ marginTop: '0.25rem' }}>
+                      <label className="form-label">Outras Verbas Fixas (R$)</label>
+                      <div style={{ position: 'relative', width: '100%' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={outrasVerbasFixas > 0 ? formatCurrencyInput(outrasVerbasFixas) : ''}
+                          onChange={e => setOutrasVerbasFixas(parseCurrencyInput(e.target.value))}
+                          placeholder="0,00"
+                          style={{ paddingLeft: '2.5rem' }}
+                        />
+                      </div>
+                      <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
+                        Funções Comissionadas, Gratificações, Adicionais (Insalubridade, etc.)
+                      </small>
+                    </div>
+
+                    {/* Incidência em Folhas Especiais */}
                     <div 
                       className="form-group" 
                       style={{ 
@@ -774,13 +831,10 @@ function App() {
                         padding: '1rem', 
                         background: 'var(--surface-default)', 
                         borderRadius: '6px', 
-                        border: '1px solid var(--panel-border)',
-                        opacity: calculationType === 'fixed' ? 0.5 : 1,
-                        pointerEvents: calculationType === 'fixed' ? 'none' : 'auto',
-                        transition: 'opacity 0.2s'
+                        border: '1px solid var(--panel-border)'
                       }}
                     >
-                      <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Incidência sobre Verbas Variáveis</label>
+                      <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Incidência em Folhas Especiais</label>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div
                           className={`bond-item ${incide13 ? 'selected' : ''}`}
@@ -807,6 +861,50 @@ function App() {
                             <div className="bond-title" style={{ fontSize: '0.8rem' }}>Férias + 1/3 Constitucional</div>
                           </div>
                         </div>
+
+                        <div
+                          className={`bond-item ${incideRescisao ? 'selected' : ''}`}
+                          onClick={() => setIncideRescisao(!incideRescisao)}
+                          style={{ padding: '0.5rem 0.75rem', position: 'relative' }}
+                        >
+                          <div className="checkbox-custom">
+                            {incideRescisao && <Check size={12} color="white" />}
+                          </div>
+                          <div className="bond-info">
+                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Rescisão</div>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`bond-item ${incideOutrasVariaveis ? 'selected' : ''}`}
+                          onClick={() => setIncideOutrasVariaveis(!incideOutrasVariaveis)}
+                          style={{ padding: '0.5rem 0.75rem', position: 'relative' }}
+                        >
+                          <div className="checkbox-custom">
+                            {incideOutrasVariaveis && <Check size={12} color="white" />}
+                          </div>
+                          <div className="bond-info">
+                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Outras Verbas Variáveis</div>
+                          </div>
+                        </div>
+                        {incideOutrasVariaveis && (
+                          <div style={{ paddingLeft: '2.5rem' }}>
+                            <div style={{ position: 'relative', width: '100%' }}>
+                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
+                              <input
+                                type="text"
+                                className="form-input"
+                                value={outrasVerbasVariaveis > 0 ? formatCurrencyInput(outrasVerbasVariaveis) : ''}
+                                onChange={e => setOutrasVerbasVariaveis(parseCurrencyInput(e.target.value))}
+                                placeholder="0,00"
+                                style={{ paddingLeft: '2.5rem', fontSize: '0.9rem' }}
+                              />
+                            </div>
+                            <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
+                              Valor conforme determinação judicial
+                            </small>
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--panel-border)' }}>
@@ -883,7 +981,69 @@ function App() {
                           </div>
                         )}
 
+                        {/* Sindicato */}
+                        <div
+                          className={`bond-item ${deductSindicato ? 'selected' : ''}`}
+                          onClick={() => setDeductSindicato(!deductSindicato)}
+                          style={{ padding: '0.5rem 0.75rem' }}
+                        >
+                          <div className="checkbox-custom">
+                            {deductSindicato && <Check size={12} color="white" />}
+                          </div>
+                          <div className="bond-info">
+                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Sindicato</div>
+                          </div>
+                          <div className="bond-salary">
+                            <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.sindicato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                          </div>
+                        </div>
+                        {deductSindicato && (
+                          <div style={{ paddingLeft: '2.5rem' }} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ position: 'relative', width: '100%' }}>
+                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
+                              <input
+                                type="text"
+                                className="form-input"
+                                value={valorSindicato > 0 ? formatCurrencyInput(valorSindicato) : ''}
+                                onChange={e => setValorSindicato(parseCurrencyInput(e.target.value))}
+                                placeholder="0,00"
+                                style={{ paddingLeft: '2.5rem', fontSize: '0.85rem' }}
+                              />
+                            </div>
+                          </div>
+                        )}
 
+                        {/* Outros Descontos */}
+                        <div
+                          className={`bond-item ${deductOutrosDescontos ? 'selected' : ''}`}
+                          onClick={() => setDeductOutrosDescontos(!deductOutrosDescontos)}
+                          style={{ padding: '0.5rem 0.75rem' }}
+                        >
+                          <div className="checkbox-custom">
+                            {deductOutrosDescontos && <Check size={12} color="white" />}
+                          </div>
+                          <div className="bond-info">
+                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Outros Descontos</div>
+                          </div>
+                          <div className="bond-salary">
+                            <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.outrosDescontos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                          </div>
+                        </div>
+                        {deductOutrosDescontos && (
+                          <div style={{ paddingLeft: '2.5rem' }} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ position: 'relative', width: '100%' }}>
+                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
+                              <input
+                                type="text"
+                                className="form-input"
+                                value={valorOutrosDescontos > 0 ? formatCurrencyInput(valorOutrosDescontos) : ''}
+                                onChange={e => setValorOutrosDescontos(parseCurrencyInput(e.target.value))}
+                                placeholder="0,00"
+                                style={{ paddingLeft: '2.5rem', fontSize: '0.85rem' }}
+                              />
+                            </div>
+                          </div>
+                        )}
 
                         <div className="calc-row total" style={{ marginTop: '0.5rem', borderTop: '1px dashed var(--panel-border)', paddingTop: '0.75rem', paddingLeft: '0.75rem', paddingRight: '0.75rem' }}>
                           <span style={{ fontSize: '0.85rem' }}><strong>Base Líquida Final:</strong></span>
@@ -899,7 +1059,7 @@ function App() {
 
                         <div className="calc-row final-discount" style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: '0.9rem' }}>
-                            <strong>Parcela ({calculationType === 'percentage' ? `${percentage}%` : 'Fixo'}):</strong>
+                            <strong>Parcela ({calculationType === 'percentage_gross' ? `${percentage}% Bruto` : calculationType === 'percentage_net' ? `${percentage}% Líquido` : 'Fixo'}):</strong>
                           </span>
                           <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
                             R$ {finalDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1330,7 +1490,7 @@ function App() {
                               const remaining = Math.max(0, totalDebt - earlyPayoffValue);
                               if (remaining === 0) return 'IMEDIATO';
                               
-                              const parcel = calculationType === 'percentage' ? (totals.net * (percentage / 100)) : fixedValue;
+                              const parcel = calculationType !== 'fixed' ? (calculationType === 'percentage_gross' ? (totals.gross * (percentage / 100)) : (totals.net * (percentage / 100))) : fixedValue;
                               if (parcel <= 0) return '-';
                               
                               const months = Math.ceil(remaining / parcel);
