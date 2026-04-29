@@ -16,7 +16,10 @@ import {
   Plus,
   LayoutGrid,
   Pencil,
-  Eye
+  Eye,
+  CheckCircle,
+  AlertTriangle,
+  Handshake
 } from 'lucide-react';
 import './App.css';
 
@@ -610,7 +613,17 @@ function App() {
                           <select 
                             className="form-input" 
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              const prevStatus = status;
+                              setStatus(newStatus);
+                              if (newStatus !== 'Ativo' && newStatus !== 'Encerrado') {
+                                if (newStatus === 'Quitado' && earlyPayoffValue === 0) {
+                                  setEarlyPayoffValue(totalDebt);
+                                }
+                                setShowPayoffModal(true);
+                              }
+                            }}
                             style={{ background: 'white' }}
                           >
                             <option value="Ativo">🟢 Ativo (Em andamento)</option>
@@ -1518,23 +1531,51 @@ function App() {
         <div className="footer">
           SEPLAG - STI - Coordenadoria de Sistemas
         </div>
-        {/* Payoff Modal */}
+        
+        {/* Status Management Modal (UX Refined) */}
         {showPayoffModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
-            <div className="card" style={{ maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', border: '2px solid #FECACA' }}>
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ background: '#FEE2E2', color: '#EF4444', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                  <Calculator size={32} />
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.75)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', backdropFilter: 'blur(4px)' }}>
+            <div className="card" style={{ 
+              maxWidth: '550px', 
+              width: '100%', 
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
+              border: status === 'Quitado' ? '2px solid #3B82F6' : status === 'Suspenso' ? '2px solid #F97316' : '2px solid #6366F1',
+              padding: 0,
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                padding: '1.5rem', 
+                background: status === 'Quitado' ? '#EFF6FF' : status === 'Suspenso' ? '#FFF7ED' : '#F5F3FF',
+                borderBottom: '1px solid ' + (status === 'Quitado' ? '#DBEAFE' : status === 'Suspenso' ? '#FFEDD5' : '#EDE9FE'),
+                textAlign: 'center' 
+              }}>
+                <div style={{ 
+                  background: status === 'Quitado' ? '#3B82F6' : status === 'Suspenso' ? '#F97316' : '#6366F1', 
+                  color: 'white', 
+                  width: '56px', 
+                  height: '56px', 
+                  borderRadius: '16px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  margin: '0 auto 1rem',
+                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                }}>
+                  {status === 'Quitado' ? <CheckCircle size={32} /> : status === 'Suspenso' ? <AlertTriangle size={32} /> : <Handshake size={32} />}
                 </div>
-                <h2 style={{ fontSize: '1.25rem', color: '#991B1B', fontWeight: 700 }}>Quitação Antecipada</h2>
-                <p style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.5rem' }}>Informe os dados para encerrar esta penhora por adiantamento.</p>
+                <h2 style={{ fontSize: '1.5rem', color: '#1E293B', fontWeight: 800, marginBottom: '0.5rem' }}>
+                  {status === 'Quitado' ? 'Registrar Quitação' : status === 'Suspenso' ? 'Suspender Penhora' : 'Acordo Judicial'}
+                </h2>
+                <p style={{ fontSize: '0.9rem', color: '#64748B' }}>
+                  {status === 'Quitado' ? 'Confirme o valor total pago para encerrar o processo.' : status === 'Suspenso' ? 'Informe o motivo e se houve amortização parcial.' : 'Registre os termos do acordo e valores negociados.'}
+                </p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <div className="form-group">
-                  <label className="form-label" style={{ color: '#991B1B' }}>Valor Pago para Quitação (R$)</label>
+                  <label className="form-label" style={{ fontWeight: 700, color: '#475569' }}>Valor da Operação / Amortização (R$)</label>
                   <div style={{ position: 'relative', width: '100%' }}>
-                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#991B1B', fontWeight: 'bold' }}>R$</span>
+                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontWeight: 800, fontSize: '1.2rem' }}>R$</span>
                     <input
                       type="text"
                       className="form-input"
@@ -1542,90 +1583,102 @@ function App() {
                       onChange={e => setEarlyPayoffValue(parseCurrencyInput(e.target.value))}
                       placeholder="0,00"
                       autoFocus
-                      style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#991B1B', paddingLeft: '3rem', borderColor: '#FECACA', background: '#FFF7F7' }}
+                      style={{ 
+                        fontSize: '2rem', 
+                        fontWeight: '800', 
+                        color: '#1E293B', 
+                        paddingLeft: '3.5rem', 
+                        height: '70px',
+                        borderRadius: '12px',
+                        border: '2px solid #E2E8F0'
+                      }}
                     />
                   </div>
-                  <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', background: '#FEF2F2', padding: '0.75rem', borderRadius: '8px', border: '1px solid #FECACA' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#991B1B' }}>
-                      <span>Dívida Atual:</span>
-                      <strong>R$ {totalDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                  
+                  {/* UX Indicator: Amortização vs Quitação */}
+                  <div style={{ 
+                    marginTop: '1rem', 
+                    padding: '1rem', 
+                    borderRadius: '12px', 
+                    background: '#F8FAFC', 
+                    border: '1px solid #E2E8F0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#64748B' }}>Saldo Devedor Atual:</span>
+                      <span style={{ fontWeight: 600 }}>R$ {totalDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    {earlyPayoffValue > 0 && (
-                      <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#B91C1C' }}>
-                          <span>Novo Saldo:</span>
-                          <strong>R$ {Math.max(0, totalDebt - earlyPayoffValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#B91C1C', paddingTop: '0.25rem', borderTop: '1px dashed #FECACA' }}>
-                          <span>Nova Previsão de Término:</span>
-                          <strong>
-                            {(() => {
-                              const remaining = Math.max(0, totalDebt - earlyPayoffValue);
-                              if (remaining === 0) return 'IMEDIATO';
-                              
-                              const parcel = calculationType !== 'fixed' ? (calculationType === 'percentage_gross' ? (totals.gross * (percentage / 100)) : (totals.net * (percentage / 100))) : fixedValue;
-                              if (parcel <= 0) return '-';
-                              
-                              const months = Math.ceil(remaining / parcel);
-                              const startDate = dataInicioForm ? new Date(dataInicioForm + 'T00:00:00') : new Date();
-                              const endDate = new Date(startDate);
-                              endDate.setMonth(startDate.getMonth() + months);
-                              return endDate.toLocaleDateString('pt-BR');
-                            })()}
-                          </strong>
-                        </div>
-                      </>
-                    )}
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#64748B' }}>Saldo Remanescente:</span>
+                      <span style={{ 
+                        fontWeight: 800, 
+                        color: earlyPayoffValue >= totalDebt ? '#059669' : '#1E293B'
+                      }}>
+                        R$ {Math.max(0, totalDebt - earlyPayoffValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div style={{ 
+                      marginTop: '0.5rem',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      background: earlyPayoffValue >= totalDebt ? '#DCFCE7' : earlyPayoffValue > 0 ? '#DBEAFE' : '#F1F5F9',
+                      color: earlyPayoffValue >= totalDebt ? '#15803D' : earlyPayoffValue > 0 ? '#1E40AF' : '#475569'
+                    }}>
+                      {earlyPayoffValue >= totalDebt ? '✨ Dívida será Totalmente Quitada' : earlyPayoffValue > 0 ? '📉 Amortização Parcial de Saldo' : 'ℹ️ Nenhuma amortização informada'}
+                    </div>
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Motivo / Observações</label>
+                  <label className="form-label" style={{ fontWeight: 700, color: '#475569' }}>Motivo / Observações Detalhadas</label>
                   <textarea 
                     className="form-textarea" 
                     rows={3} 
-                    placeholder="Ex: Pagamento parcial efetuado via guia..."
+                    placeholder="Descreva aqui os detalhes desta alteração para o histórico..."
+                    style={{ borderRadius: '12px', padding: '1rem' }}
                     value={payoffObservations}
                     onChange={(e) => setPayoffObservations(e.target.value)}
                   ></textarea>
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1 }}
+                  <button
+                    className="btn btn-secondary"
+                    style={{ flex: 1, height: '48px', fontWeight: 700 }}
                     onClick={() => {
                       setShowPayoffModal(false);
-                      if (earlyPayoffValue === 0) setStatus('Ativo');
+                      setEarlyPayoffValue(0);
                     }}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    className="btn btn-primary" 
-                    style={{ flex: 1, background: '#EF4444', border: 'none' }}
+                  <button
+                    className="btn btn-primary"
+                    style={{ 
+                      flex: 2, 
+                      height: '48px', 
+                      fontWeight: 700, 
+                      background: status === 'Quitado' ? '#3B82F6' : status === 'Suspenso' ? '#F97316' : '#6366F1'
+                    }}
                     onClick={() => {
-                      if (earlyPayoffValue > 0) {
-                        const remaining = Math.max(0, totalDebt - earlyPayoffValue);
-                        
-                        // If there is still debt, update totalDebt and let the main effect recalculate date
-                        // and keep status as 'Ativo' if the user wants to continue?
-                        // But the user selected 'Inativo'. If it's partial, maybe we should keep it 'Ativo'.
-                        if (remaining > 0) {
-                          setTotalDebt(remaining);
-                          setStatus('Ativo');
-                          alert(`Amortização realizada! Novo saldo devedor: R$ ${remaining.toLocaleString('pt-BR')}. A data de término será recalculada.`);
-                        } else {
-                          setStatus('Inativo');
-                        }
-                        
-                        setShowPayoffModal(false);
-                      } else {
-                        alert('Por favor, informe o valor pago.');
+                      const newTotal = Math.max(0, totalDebt - earlyPayoffValue);
+                      setTotalDebt(newTotal);
+                      if (newTotal === 0 && status !== 'Quitado' && status !== 'Suspenso') {
+                        setStatus('Quitado');
                       }
+                      setShowPayoffModal(false);
                     }}
                   >
-                    {totalDebt - earlyPayoffValue > 0 ? 'Confirmar Amortização' : 'Confirmar Quitação Total'}
+                    Confirmar Alteração
                   </button>
                 </div>
               </div>
