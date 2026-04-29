@@ -834,7 +834,23 @@ function App() {
                         border: '1px solid var(--panel-border)'
                       }}
                     >
-                      <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Incidência em Folhas Especiais</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <label className="form-label" style={{ marginBottom: 0, display: 'block' }}>Incidência em Folhas Especiais</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allSelected = incide13 && incideFerias && incideRescisao;
+                            setIncide13(!allSelected);
+                            setIncideFerias(!allSelected);
+                            setIncideRescisao(!allSelected);
+                          }}
+                          style={{ background: 'none', border: 'none', color: 'var(--primary-color)', fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600, padding: '2px 6px', borderRadius: '4px' }}
+                          onMouseOver={(e) => e.currentTarget.style.background = '#EFF6FF'}
+                          onMouseOut={(e) => e.currentTarget.style.background = 'none'}
+                        >
+                          {incide13 && incideFerias && incideRescisao ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                        </button>
+                      </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div
                           className={`bond-item ${incide13 ? 'selected' : ''}`}
