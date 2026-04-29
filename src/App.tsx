@@ -1403,6 +1403,37 @@ function App() {
                       <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Técnico Administrativo - SES (Interino)</span>
                     </div>
                   </div>
+
+                  {/* Histórico e Observações */}
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem' }}>Histórico e Observações</h3>
+                  <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--primary-color)', border: '2px solid #DBEAFE' }}></div>
+                        <div style={{ width: '2px', flex: 1, background: '#E2E8F0', marginTop: '4px' }}></div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E293B' }}>SITUAÇÃO ATUAL: {viewingPenhora.status}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>Atualizado em: {new Date().toLocaleDateString('pt-BR')}</div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '4px' }}>OBSERVAÇÕES DO PROCESSO</label>
+                      <div style={{ 
+                        fontSize: '0.8rem', 
+                        color: '#475569', 
+                        padding: '0.75rem', 
+                        background: '#F8FAFC', 
+                        borderRadius: '6px',
+                        border: '1px solid #F1F5F9',
+                        minHeight: '60px',
+                        lineHeight: '1.4'
+                      }}>
+                        {viewingPenhora.observacoes || "Nenhuma observação registrada para este processo judicial."}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ background: '#F1F5F9', padding: '1.5rem', borderRadius: '12px', border: '1px solid #CBD5E1' }}>
@@ -1437,10 +1468,14 @@ function App() {
                       borderRadius: '999px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      background: viewingPenhora.status === 'Ativo' ? '#DCFCE7' : '#F1F5F9',
-                      color: viewingPenhora.status === 'Ativo' ? '#15803D' : '#475569'
+                      background: viewingPenhora.status === 'Ativo' ? '#DCFCE7' : 
+                                 viewingPenhora.status === 'Suspenso' ? '#FFEDD5' :
+                                 viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#F1F5F9' : '#DBEAFE',
+                      color: viewingPenhora.status === 'Ativo' ? '#15803D' : 
+                             viewingPenhora.status === 'Suspenso' ? '#9A3412' :
+                             viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#475569' : '#1E40AF'
                     }}>
-                      {viewingPenhora.status === 'Ativo' ? 'LANÇAMENTO EM FOLHA' : 'ENCERRADO'}
+                      {viewingPenhora.status === 'Ativo' ? 'LANÇAMENTO EM FOLHA' : viewingPenhora.status.toUpperCase()}
                     </span>
                   </div>
                 </div>
