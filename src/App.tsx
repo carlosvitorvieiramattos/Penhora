@@ -162,10 +162,8 @@ function App() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [incidenciaDropdownOpen, setIncidenciaDropdownOpen] = useState<boolean>(false);
-  const [incidentDropdownOpen, setIncidentDropdownOpen] = useState<boolean>(false);
   const [selectedIncidents, setSelectedIncidents] = useState<string[]>([]);
   const [incidentSearch, setIncidentSearch] = useState<string>('');
-  const [selectedRubrics, setSelectedRubrics] = useState<string[]>(['1001', '1035', '1050']); // Padrão selecionado
   const [useSalarioMinimo, setUseSalarioMinimo] = useState<boolean>(false);
   const salarioMinimoValor = 1412.00;
 
@@ -278,7 +276,6 @@ function App() {
     setOutrasVerbasVariaveis(0);
     setOrdemImplantacao(1);
     setCalculationType('percentage_net');
-    setSelectedRubrics(['1001', '1035', '1050']);
     setUseSalarioMinimo(false);
     setPercentage(30);
     setFixedValue(0);
@@ -291,7 +288,8 @@ function App() {
     setStatus('Ativo');
     setEarlyPayoffValue(0);
     setPayoffObservations('');
-    setSelectedRubrics(['1001', '1035', '1050']);
+    setSelectedIncidents([]);
+    setIncidentSearch('');
     setUseSalarioMinimo(false);
     setEditingPenhora(null);
   };
@@ -429,10 +427,15 @@ function App() {
       const eYear = end.getFullYear();
       const eMonth = String(end.getMonth() + 1).padStart(2, '0');
       const eDay = String(end.getDate()).padStart(2, '0');
-      setDataTerminoForm(`${eYear}-${eMonth}-${eDay}`);
-    } else {
+      
+      const newDate = `${eYear}-${eMonth}-${eDay}`;
+      if (dataTerminoForm !== newDate) {
+        setDataTerminoForm(newDate);
+      }
+    } else if (dataTerminoForm !== '') {
       setDataTerminoForm('');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalDebt, finalDiscount, dataInicioForm]);
 
 
@@ -653,7 +656,6 @@ function App() {
                             value={status}
                             onChange={(e) => {
                               const newStatus = e.target.value;
-                              const prevStatus = status;
                               setStatus(newStatus);
                               if (newStatus !== 'Ativo' && newStatus !== 'Encerrado') {
                                 if (newStatus === 'Quitado' && earlyPayoffValue === 0) {
@@ -861,446 +863,213 @@ function App() {
                         )}
                       </div>
                     </div>
-
-
-
-                    {/* Incidência em Folhas - Multiselect */}
+                                      {/* Seletor Consolidado de Incidências */}
                     <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-                      <label className="form-label">Incidência em Folhas</label>
+                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Incidências e Bases de Cálculo
+                        <span style={{ fontSize: '0.65rem', background: '#DBEAFE', padding: '2px 6px', borderRadius: '4px', color: '#1E40AF', fontWeight: 600 }}>FOLHAS E VARIÁVEIS</span>
+                      </label>
                       <div style={{ position: 'relative' }}>
-                        {/* Multiselect Input */}
+                        {/* Unified Multiselect Input */}
                         <div
                           onClick={() => setIncidenciaDropdownOpen(!incidenciaDropdownOpen)}
                           style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            minHeight: '42px',
-                            padding: '6px 36px 6px 10px',
+                            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.35rem',
+                            minHeight: '44px', padding: '8px 36px 8px 12px',
                             border: incidenciaDropdownOpen ? '2px solid var(--primary-color)' : '1px solid var(--panel-border)',
-                            borderRadius: '6px',
-                            background: 'white',
-                            cursor: 'pointer',
-                            transition: 'border-color 0.15s'
+                            borderRadius: '8px', background: 'white', cursor: 'pointer', transition: 'all 0.2s'
                           }}
                         >
-                          {/* Tags */}
+                          {/* Main Tags */}
                           {incide13 && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #BFDBFE' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#2563EB', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
                               13º Salário
-                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncide13(false); }} />
+                              <X size={12} onClick={(e) => { e.stopPropagation(); setIncide13(false); }} />
                             </span>
                           )}
                           {incideFerias && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #BFDBFE' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#2563EB', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
                               Férias + 1/3
-                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncideFerias(false); }} />
+                              <X size={12} onClick={(e) => { e.stopPropagation(); setIncideFerias(false); }} />
                             </span>
                           )}
                           {incideRescisao && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #BFDBFE' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#2563EB', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
                               Rescisão
-                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncideRescisao(false); }} />
+                              <X size={12} onClick={(e) => { e.stopPropagation(); setIncideRescisao(false); }} />
                             </span>
                           )}
                           {incideOutrasVariaveis && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#FEF3C7', color: '#92400E', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 500, border: '1px solid #FDE68A' }}>
-                              Outras Variáveis
-                              <X size={12} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setIncideOutrasVariaveis(false); }} />
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#D97706', color: 'white', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
+                              Outras Verbas
+                              <X size={12} onClick={(e) => { e.stopPropagation(); setIncideOutrasVariaveis(false); }} />
                             </span>
                           )}
-                          {!incide13 && !incideFerias && !incideRescisao && !incideOutrasVariaveis && (
-                            <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Selecione as folhas...</span>
-                          )}
-                          {/* Clear All + Chevron */}
-                          <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {(incide13 || incideFerias || incideRescisao || incideOutrasVariaveis) && (
-                              <X
-                                size={14}
-                                style={{ cursor: 'pointer', color: '#94A3B8' }}
-                                onClick={(e) => { e.stopPropagation(); setIncide13(false); setIncideFerias(false); setIncideRescisao(false); setIncideOutrasVariaveis(false); }}
-                              />
-                            )}
-                            <ChevronDown size={16} style={{ color: '#94A3B8', transform: incidenciaDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
-                          </div>
-                        </div>
+                          
+                          {/* System Variables Tags */}
+                          {selectedIncidents.map(inc => (
+                            <span key={inc} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#F1F5F9', color: '#475569', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, border: '1px solid #E2E8F0' }}>
+                              {inc}
+                              <X size={10} onClick={(e) => { e.stopPropagation(); setSelectedIncidents(prev => prev.filter(i => i !== inc)); }} />
+                            </span>
+                          ))}
 
-                        {/* Dropdown Options */}
-                        {incidenciaDropdownOpen && (
-                          <div style={{
-                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px',
-                            background: 'white', border: '1px solid var(--panel-border)', borderRadius: '6px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, overflow: 'hidden'
-                          }}>
-                            {[
-                              { label: '13º Salário', checked: incide13, toggle: () => setIncide13(!incide13) },
-                              { label: 'Férias + 1/3 Constitucional', checked: incideFerias, toggle: () => setIncideFerias(!incideFerias) },
-                              { label: 'Rescisão', checked: incideRescisao, toggle: () => setIncideRescisao(!incideRescisao) },
-                              { label: 'Outras Verbas Variáveis', checked: incideOutrasVariaveis, toggle: () => setIncideOutrasVariaveis(!incideOutrasVariaveis) },
-                            ].map((opt, i) => (
-                              <div
-                                key={i}
-                                onClick={(e) => { e.stopPropagation(); opt.toggle(); }}
-                                style={{
-                                  display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem',
-                                  cursor: 'pointer', fontSize: '0.82rem', fontWeight: opt.checked ? 600 : 400,
-                                  background: opt.checked ? '#F0F9FF' : 'white', color: '#1E293B',
-                                  borderBottom: i < 3 ? '1px solid #F1F5F9' : 'none',
-                                  transition: 'background 0.1s'
-                                }}
-                                onMouseOver={(e) => { if (!opt.checked) e.currentTarget.style.background = '#F8FAFC'; }}
-                                onMouseOut={(e) => { e.currentTarget.style.background = opt.checked ? '#F0F9FF' : 'white'; }}
-                              >
-                                <div style={{
-                                  width: '16px', height: '16px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  background: opt.checked ? 'var(--primary-color)' : 'white', border: opt.checked ? 'none' : '1.5px solid #CBD5E1',
-                                  transition: 'all 0.15s', flexShrink: 0
-                                }}>
-                                  {opt.checked && <Check size={11} color="white" />}
-                                </div>
-                                {opt.label}
-                              </div>
-                            ))}
-                          </div>
-                      </div>
-                    </div>
-
-                    {/* Variáveis e Bases Sistêmicas - Searchable Multiselect */}
-                    <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
-                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        Variáveis e Bases Sistêmicas (Incidências)
-                        <span style={{ fontSize: '0.65rem', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px', color: '#64748B' }}>AVANÇADO</span>
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        {/* Multiselect Input */}
-                        <div
-                          onClick={() => setIncidentDropdownOpen(!incidentDropdownOpen)}
-                          style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            minHeight: '42px',
-                            padding: '6px 36px 6px 10px',
-                            border: incidentDropdownOpen ? '2px solid var(--primary-color)' : '1px solid var(--panel-border)',
-                            borderRadius: '6px',
-                            background: 'white',
-                            cursor: 'pointer',
-                            transition: 'border-color 0.15s'
-                          }}
-                        >
-                          {/* Tags */}
-                          {selectedIncidents.length > 0 ? (
-                            selectedIncidents.map(inc => (
-                              <span key={inc} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#F1F5F9', color: '#475569', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, border: '1px solid #E2E8F0' }}>
-                                {inc}
-                                <X size={10} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={(e) => { e.stopPropagation(); setSelectedIncidents(prev => prev.filter(i => i !== inc)); }} />
-                              </span>
-                            ))
-                          ) : (
-                            <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Selecione as variáveis sistêmicas...</span>
+                          {!incide13 && !incideFerias && !incideRescisao && !incideOutrasVariaveis && selectedIncidents.length === 0 && (
+                            <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Selecione as incidências (Folhas, Bases, Alíquotas)...</span>
                           )}
                           
-                          {/* Clear All + Chevron */}
-                          <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {selectedIncidents.length > 0 && (
-                              <X
-                                size={14}
-                                style={{ cursor: 'pointer', color: '#94A3B8' }}
-                                onClick={(e) => { e.stopPropagation(); setSelectedIncidents([]); }}
-                              />
+                          <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {(incide13 || incideFerias || incideRescisao || incideOutrasVariaveis || selectedIncidents.length > 0) && (
+                              <X size={14} style={{ color: '#94A3B8' }} onClick={(e) => { e.stopPropagation(); setIncide13(false); setIncideFerias(false); setIncideRescisao(false); setIncideOutrasVariaveis(false); setSelectedIncidents([]); }} />
                             )}
-                            <ChevronDown size={16} style={{ color: '#94A3B8', transform: incidentDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
+                            <ChevronDown size={18} style={{ color: '#94A3B8', transform: incidenciaDropdownOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
                           </div>
                         </div>
 
-                        {/* Dropdown Options with Search */}
-                        {incidentDropdownOpen && (
+                        {/* Consolidated Searchable Dropdown */}
+                        {incidenciaDropdownOpen && (
                           <div style={{
-                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px',
-                            background: 'white', border: '1px solid var(--panel-border)', borderRadius: '8px',
-                            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', zIndex: 30, overflow: 'hidden'
+                            position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '6px',
+                            background: 'white', border: '1px solid var(--panel-border)', borderRadius: '10px',
+                            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', zIndex: 100, overflow: 'hidden'
                           }}>
-                            {/* Search Box */}
-                            <div style={{ padding: '8px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
+                            {/* Search Bar */}
+                            <div style={{ padding: '10px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
                               <div style={{ position: 'relative' }}>
-                                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
                                 <input
                                   type="text"
-                                  placeholder="Filtrar variáveis (ex: BASE, ALIQUOTA)..."
+                                  placeholder="Pesquisar incidência ou variável..."
                                   value={incidentSearch}
                                   onChange={e => setIncidentSearch(e.target.value)}
                                   onClick={e => e.stopPropagation()}
-                                  style={{
-                                    width: '100%',
-                                    padding: '6px 10px 6px 30px',
-                                    fontSize: '0.8rem',
-                                    border: '1px solid #E2E8F0',
-                                    borderRadius: '4px',
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s'
-                                  }}
+                                  style={{ width: '100%', padding: '8px 12px 8px 36px', fontSize: '0.85rem', border: '1px solid #E2E8F0', borderRadius: '6px', outline: 'none' }}
                                 />
                               </div>
                             </div>
 
-                            {/* Scrollable List */}
-                            <div style={{ maxHeight: '250px', overflowY: 'auto' }} className="history-scroll">
-                              {ALL_INCIDENTS.filter(inc => inc.toLowerCase().includes(incidentSearch.toLowerCase())).map((inc) => {
+                            <div style={{ maxHeight: '350px', overflowY: 'auto' }} className="history-scroll">
+                              {/* Primary Sections */}
+                              {incidentSearch === '' && (
+                                <div style={{ padding: '8px 12px 4px', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Folhas Principais</div>
+                              )}
+                              
+                              {[
+                                { id: 'inc13', label: '13º Salário', checked: incide13, toggle: () => setIncide13(!incide13) },
+                                { id: 'incFer', label: 'Férias + 1/3 Constitucional', checked: incideFerias, toggle: () => setIncideFerias(!incideFerias) },
+                                { id: 'incRes', label: 'Rescisão', checked: incideRescisao, toggle: () => setIncideRescisao(!incideRescisao) },
+                                { id: 'incOut', label: 'Outras Verbas Variáveis', checked: incideOutrasVariaveis, toggle: () => setIncideOutrasVariaveis(!incideOutrasVariaveis) },
+                              ].filter(opt => opt.label.toLowerCase().includes(incidentSearch.toLowerCase())).map(opt => (
+                                <div
+                                  key={opt.id}
+                                  onClick={(e) => { e.stopPropagation(); opt.toggle(); }}
+                                  style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+                                    cursor: 'pointer', fontSize: '0.85rem', fontWeight: opt.checked ? 600 : 400,
+                                    background: opt.checked ? '#EFF6FF' : 'white', borderBottom: '1px solid #F1F5F9'
+                                  }}
+                                >
+                                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: opt.checked ? '#2563EB' : 'white', border: opt.checked ? 'none' : '2px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {opt.checked && <Check size={12} color="white" />}
+                                  </div>
+                                  {opt.label}
+                                </div>
+                              ))}
+
+                              {/* Variables Section */}
+                              <div style={{ padding: '12px 12px 4px', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', borderTop: '1px solid #F1F5F9' }}>Variáveis e Bases Sistêmicas</div>
+                              
+                              {ALL_INCIDENTS.filter(inc => inc.toLowerCase().includes(incidentSearch.toLowerCase())).map(inc => {
                                 const isSelected = selectedIncidents.includes(inc);
                                 return (
                                   <div
                                     key={inc}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setSelectedIncidents(prev => 
-                                        isSelected ? prev.filter(item => item !== inc) : [...prev, inc]
-                                      );
+                                      setSelectedIncidents(prev => isSelected ? prev.filter(i => i !== inc) : [...prev, inc]);
                                     }}
                                     style={{
                                       display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 1rem',
-                                      cursor: 'pointer', fontSize: '0.75rem', fontWeight: isSelected ? 700 : 400,
-                                      background: isSelected ? '#F0F9FF' : 'white', color: isSelected ? 'var(--primary-color)' : '#1E293B',
-                                      borderBottom: '1px solid #F1F5F9', transition: 'all 0.1s'
+                                      cursor: 'pointer', fontSize: '0.75rem', fontWeight: isSelected ? 600 : 400,
+                                      background: isSelected ? '#F8FAFC' : 'white', borderBottom: '1px solid #F1F5F9'
                                     }}
-                                    onMouseOver={(e) => { if (!isSelected) e.currentTarget.style.background = '#F8FAFC'; }}
-                                    onMouseOut={(e) => { e.currentTarget.style.background = isSelected ? '#F0F9FF' : 'white'; }}
                                   >
-                                    <div style={{
-                                      width: '16px', height: '16px', borderRadius: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                      background: isSelected ? 'var(--primary-color)' : 'white', border: isSelected ? 'none' : '1.5px solid #CBD5E1',
-                                      transition: 'all 0.15s', flexShrink: 0
-                                    }}>
-                                      {isSelected && <Check size={11} color="white" />}
+                                    <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: isSelected ? '#475569' : 'white', border: isSelected ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      {isSelected && <Check size={10} color="white" />}
                                     </div>
                                     {inc}
                                   </div>
                                 );
                               })}
-                              {ALL_INCIDENTS.filter(inc => inc.toLowerCase().includes(incidentSearch.toLowerCase())).length === 0 && (
-                                <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94A3B8', fontSize: '0.8rem' }}>
-                                  Nenhuma variável encontrada para "{incidentSearch}"
-                                </div>
-                              )}
                             </div>
                           </div>
                         )}
                       </div>
                     </div>
 
-                      {/* Outras Variáveis value input */}
-                      {incideOutrasVariaveis && (
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <div style={{ position: 'relative', width: '100%' }}>
-                            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                            <input
-                              type="text"
-                              className="form-input"
-                              value={outrasVerbasVariaveis > 0 ? formatCurrencyInput(outrasVerbasVariaveis) : ''}
-                              onChange={e => setOutrasVerbasVariaveis(parseCurrencyInput(e.target.value))}
-                              placeholder="0,00"
-                              style={{ paddingLeft: '2.5rem', fontSize: '0.9rem' }}
-                            />
-                          </div>
-                          <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.2rem', display: 'block' }}>
-                            Valor conforme determinação judicial
-                          </small>
+                    {/* Valor de Outras Verbas se selecionado */}
+                    {incideOutrasVariaveis && (
+                      <div className="form-group" style={{ marginTop: '-1rem', marginBottom: '1.5rem', background: '#FFFBEB', padding: '1rem', borderRadius: '8px', border: '1px solid #FEF3C7' }}>
+                        <label className="form-label" style={{ color: '#92400E' }}>Valor das Outras Verbas Variáveis (R$)</label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#92400E', fontWeight: 700 }}>R$</span>
+                          <input
+                            type="text"
+                            className="form-input"
+                            style={{ paddingLeft: '2.5rem', border: '1px solid #FDE68A' }}
+                            value={outrasVerbasVariaveis > 0 ? formatCurrencyInput(outrasVerbasVariaveis) : ''}
+                            onChange={e => setOutrasVerbasVariaveis(parseCurrencyInput(e.target.value))}
+                            placeholder="0,00"
+                          />
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Deduções e Resumo */}
-                    <div 
-                      className="form-group" 
-                      style={{ 
-                        padding: '1rem', 
-                        background: 'var(--surface-default)', 
-                        borderRadius: '6px', 
-                        border: '1px solid var(--panel-border)',
-                        marginBottom: '1rem'
-                      }}
-                    >
-                      <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Deduções Legais</label>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-
-
-                        <div
-                          className={`bond-item ${deductPrev ? 'selected' : ''}`}
-                          onClick={() => setDeductPrev(!deductPrev)}
-                          style={{ padding: '0.5rem 0.75rem' }}
-                        >
-                          <div className="checkbox-custom">
-                            {deductPrev && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>INSS / Previdência</div>
-                          </div>
-                          <div className="bond-salary">
-                            <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.prev.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                          </div>
+                    <div className="form-group" style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '8px', border: '1px solid var(--panel-border)', marginBottom: '1rem' }}>
+                      <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Deduções Legais de Cálculo</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div className={`bond-item ${deductPrev ? 'selected' : ''}`} onClick={() => setDeductPrev(!deductPrev)} style={{ padding: '0.6rem 1rem' }}>
+                          <div className="checkbox-custom">{deductPrev && <Check size={12} color="white" />}</div>
+                          <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem' }}>INSS / Previdência</div></div>
+                          <div className="bond-salary"><div className="bond-gross" style={{ fontSize: '0.8rem', color: '#EF4444' }}>- R$ {totals.prev.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div></div>
                         </div>
 
                         {totals.pensao > 0 && (
-                          <div
-                            className={`bond-item ${deductPensao ? 'selected' : ''}`}
-                            onClick={() => setDeductPensao(!deductPensao)}
-                            style={{ padding: '0.5rem 0.75rem' }}
-                          >
-                            <div className="checkbox-custom">
-                              {deductPensao && <Check size={12} color="white" />}
-                            </div>
-                            <div className="bond-info">
-                              <div className="bond-title" style={{ fontSize: '0.8rem' }}>Pensão Alimentícia</div>
-                            </div>
-                            <div className="bond-salary">
-                              <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.pensao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                            </div>
+                          <div className={`bond-item ${deductPensao ? 'selected' : ''}`} onClick={() => setDeductPensao(!deductPensao)} style={{ padding: '0.6rem 1rem' }}>
+                            <div className="checkbox-custom">{deductPensao && <Check size={12} color="white" />}</div>
+                            <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem' }}>Pensão Alimentícia</div></div>
+                            <div className="bond-salary"><div className="bond-gross" style={{ fontSize: '0.8rem', color: '#EF4444' }}>- R$ {totals.pensao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div></div>
                           </div>
                         )}
 
-                        <div
-                          className={`bond-item ${deductIRRF ? 'selected' : ''}`}
-                          onClick={() => setDeductIRRF(!deductIRRF)}
-                          style={{ padding: '0.5rem 0.75rem' }}
-                        >
-                          <div className="checkbox-custom">
-                            {deductIRRF && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Imposto de Renda (IRRF)</div>
-                          </div>
-                          <div className="bond-salary">
-                            <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.irrf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                          </div>
+                        <div className={`bond-item ${deductIRRF ? 'selected' : ''}`} onClick={() => setDeductIRRF(!deductIRRF)} style={{ padding: '0.6rem 1rem' }}>
+                          <div className="checkbox-custom">{deductIRRF && <Check size={12} color="white" />}</div>
+                          <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem' }}>IRRF</div></div>
+                          <div className="bond-salary"><div className="bond-gross" style={{ fontSize: '0.8rem', color: '#EF4444' }}>- R$ {totals.irrf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div></div>
                         </div>
 
-                        {totals.outrasPenhoras > 0 && (
-                          <div
-                            className={`bond-item ${deductOutras ? 'selected' : ''}`}
-                            onClick={() => setDeductOutras(!deductOutras)}
-                            style={{ padding: '0.5rem 0.75rem' }}
-                          >
-                            <div className="checkbox-custom">
-                              {deductOutras && <Check size={12} color="white" />}
-                            </div>
-                            <div className="bond-info">
-                              <div className="bond-title" style={{ fontSize: '0.8rem' }}>Penhoras Anteriores</div>
-                            </div>
-                            <div className="bond-salary">
-                              <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.outrasPenhoras.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Sindicato */}
-                        <div
-                          className={`bond-item ${deductSindicato ? 'selected' : ''}`}
-                          onClick={() => setDeductSindicato(!deductSindicato)}
-                          style={{ padding: '0.5rem 0.75rem' }}
-                        >
-                          <div className="checkbox-custom">
-                            {deductSindicato && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Sindicato</div>
-                          </div>
-                          <div className="bond-salary">
-                            <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.sindicato.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                          </div>
-                        </div>
-                        {deductSindicato && (
-                          <div style={{ paddingLeft: '2.5rem' }} onClick={(e) => e.stopPropagation()}>
-                            <div style={{ position: 'relative', width: '100%' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={valorSindicato > 0 ? formatCurrencyInput(valorSindicato) : ''}
-                                onChange={e => setValorSindicato(parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                                style={{ paddingLeft: '2.5rem', fontSize: '0.85rem' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Outros Descontos */}
-                        <div
-                          className={`bond-item ${deductOutrosDescontos ? 'selected' : ''}`}
-                          onClick={() => setDeductOutrosDescontos(!deductOutrosDescontos)}
-                          style={{ padding: '0.5rem 0.75rem' }}
-                        >
-                          <div className="checkbox-custom">
-                            {deductOutrosDescontos && <Check size={12} color="white" />}
-                          </div>
-                          <div className="bond-info">
-                            <div className="bond-title" style={{ fontSize: '0.8rem' }}>Outros Descontos</div>
-                          </div>
-                          <div className="bond-salary">
-                            <div className="bond-gross" style={{ fontSize: '0.8rem', color: 'var(--danger-color)' }}>- R$ {totals.outrosDescontos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                          </div>
-                        </div>
-                        {deductOutrosDescontos && (
-                          <div style={{ paddingLeft: '2.5rem' }} onClick={(e) => e.stopPropagation()}>
-                            <div style={{ position: 'relative', width: '100%' }}>
-                              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>R$</span>
-                              <input
-                                type="text"
-                                className="form-input"
-                                value={valorOutrosDescontos > 0 ? formatCurrencyInput(valorOutrosDescontos) : ''}
-                                onChange={e => setValorOutrosDescontos(parseCurrencyInput(e.target.value))}
-                                placeholder="0,00"
-                                style={{ paddingLeft: '2.5rem', fontSize: '0.85rem' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="calc-row total" style={{ marginTop: '0.5rem', borderTop: '1px dashed var(--panel-border)', paddingTop: '0.75rem', paddingLeft: '0.75rem', paddingRight: '0.75rem' }}>
-                          <span style={{ fontSize: '0.85rem' }}><strong>Base Líquida Final:</strong></span>
-                          <span style={{ fontSize: '0.85rem' }}><strong>R$ {totals.net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></span>
+                        <div className="calc-row total" style={{ marginTop: '0.5rem', borderTop: '1px dashed #CBD5E1', paddingTop: '0.75rem', padding: '0.75rem' }}>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>BASE LÍQUIDA FINAL:</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B' }}>R$ {totals.net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
 
-                        <div className="calc-row" style={{ padding: '0 0.75rem', marginTop: '0.5rem' }}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tempo de Duração:</span>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                            {totalDebt > 0 && finalDiscount > 0 ? `${Math.ceil(totalDebt / finalDiscount)} parcelas` : '-'}
-                          </span>
-                        </div>
-
-                        <div className="calc-row final-discount" style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.9rem' }}>
-                            <strong>Parcela ({calculationType === 'percentage_gross' ? `${percentage}% Bruto` : calculationType === 'percentage_net' ? `${percentage}% Líquido` : 'Fixo'}):</strong>
-                          </span>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-                            R$ {finalDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
+                        <div className="calc-row final-discount" style={{ marginTop: '0.5rem', background: '#EFF6FF', padding: '1rem', borderRadius: '8px', border: '1px solid #BFDBFE' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>Parcela Estimada:</span>
+                          <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2563EB' }}>R$ {finalDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="action-bar">
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setActiveScreen('list')}
-                      >
-                        Cancelar
-                      </button>
+                      <button className="btn btn-secondary" onClick={() => setActiveScreen('list')}>Cancelar</button>
                       <button
                         className="btn btn-primary"
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isSaving ? 0.7 : 1 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isSaving ? 0.7 : 1, padding: '0.75rem 2rem' }}
                         onClick={handleSave}
                         disabled={isSaving || !cpfServidor || selectedBonds.length === 0 || !totalDebt || totalDebt <= 0}
                       >
-                        {isSaving ? (
-                          <>Processando...</>
-                        ) : (
-                          <>
-                            <Save size={16} />
-                            Lançar Penhora
-                          </>
-                        )}
+                        {isSaving ? <>Processando...</> : <><Save size={18} /> Lançar Penhora</>}
                       </button>
                     </div>
 
