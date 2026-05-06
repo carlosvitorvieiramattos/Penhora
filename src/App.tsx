@@ -19,7 +19,15 @@ import {
   Eye,
   CheckCircle,
   AlertTriangle,
-  Handshake
+  Handshake,
+  File,
+  Download,
+  Building2,
+  CreditCard,
+  Calendar,
+  History,
+  FileText,
+  Printer
 } from 'lucide-react';
 import './App.css';
 
@@ -61,8 +69,23 @@ interface Penhora {
   totalDebt: number;
   ordemImplantacao: number;
   sigaDoc?: string;
+  sigaDocFile?: string;
   observacoes?: string;
   history: HistoryEntry[];
+  // Banking Data
+  banco?: string;
+  agencia?: string;
+  conta?: string;
+  tipoPagamento?: string;
+  favorecidoNome?: string;
+  favorecidoCpfCnpj?: string;
+  credorDataNascimento?: string;
+  credorCpf?: string;
+  // Status Details
+  dataInativacao?: string;
+  motivoInativacao?: string;
+  motivoOutros?: string;
+  documentoNovaNegociacao?: string;
 }
 
 // Mock data for the user bonds
@@ -87,8 +110,8 @@ const parseCurrencyInput = (value: string) => {
 };
 
 const INITIAL_MOCK_PENHORAS: Penhora[] = [
-  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }] },
-  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
+  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }], favorecidoNome: 'Maria Joaquina', banco: 'Banco do Brasil', agencia: '1234', conta: '56789-0' },
+  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], favorecidoNome: 'João Silva', banco: 'Caixa Econômica', agencia: '4321', conta: '98765-4' },
   { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1, history: [{ id: 'h3', date: '10/10/2021 08:15', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }, { id: 'h4', date: '10/10/2023 18:00', status: 'Encerrado', action: 'Atualização de Status', observation: 'Processo encerrado por decurso de prazo.' }] },
   { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h5', date: '01/03/2024 11:20', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
   { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2, history: [{ id: 'h6', date: '10/04/2024 16:45', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
@@ -156,8 +179,30 @@ function App() {
   const [dataInicioForm, setDataInicioForm] = useState<string>('');
   const [dataTerminoForm, setDataTerminoForm] = useState<string>('');
   const [status, setStatus] = useState<string>('Ativo');
+
+  // Banking Data State
+  const [banco, setBanco] = useState<string>('');
+  const [agencia, setAgencia] = useState<string>('');
+  const [conta, setConta] = useState<string>('');
+  const [tipoPagamento, setTipoPagamento] = useState<string>('Conta Corrente');
+  const [favorecidoNome, setFavorecidoNome] = useState<string>('');
+  const [favorecidoCpfCnpj, setFavorecidoCpfCnpj] = useState<string>('');
+  const [credorDataNascimento, setCredorDataNascimento] = useState<string>('');
+  const [credorCpf, setCredorCpf] = useState<string>('');
+
+  // Status Details State
+  const [dataInativacao, setDataInativacao] = useState<string>('');
+  const [motivoInativacao, setMotivoInativacao] = useState<string>('');
+  const [motivoOutros, setMotivoOutros] = useState<string>('');
+  const [documentoNovaNegociacao, setDocumentoNovaNegociacao] = useState<string>('');
+
+  // File Upload State
+  const [sigaDocFile, setSigaDocFile] = useState<string>('');
+  const [oficioTemplate, setOficioTemplate] = useState<string>('');
+
   const [earlyPayoffValue, setEarlyPayoffValue] = useState<number>(0);
   const [showPayoffModal, setShowPayoffModal] = useState<boolean>(false);
+  const [showOficioModal, setShowOficioModal] = useState<boolean>(false);
   const [payoffObservations, setPayoffObservations] = useState<string>('');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -232,8 +277,23 @@ function App() {
         totalDebt: totalDebt,
         ordemImplantacao: ordemImplantacao,
         sigaDoc: sigaDoc,
+        sigaDocFile: sigaDocFile,
         observacoes: payoffObservations,
-        history: editingPenhora ? [...(editingPenhora.history || []), historyEntry] : [historyEntry]
+        history: editingPenhora ? [...(editingPenhora.history || []), historyEntry] : [historyEntry],
+        // Banking Data
+        banco,
+        agencia,
+        conta,
+        tipoPagamento,
+        favorecidoNome,
+        favorecidoCpfCnpj,
+        credorDataNascimento,
+        credorCpf,
+        // Status Details
+        dataInativacao,
+        motivoInativacao,
+        motivoOutros,
+        documentoNovaNegociacao,
       };
 
       if (editingPenhora) {
@@ -292,6 +352,21 @@ function App() {
     setIncidentSearch('');
     setUseSalarioMinimo(false);
     setEditingPenhora(null);
+    // Reset Banking
+    setBanco('');
+    setAgencia('');
+    setConta('');
+    setTipoPagamento('Conta Corrente');
+    setFavorecidoNome('');
+    setFavorecidoCpfCnpj('');
+    setCredorDataNascimento('');
+    setCredorCpf('');
+    // Reset Status Details
+    setDataInativacao('');
+    setMotivoInativacao('');
+    setMotivoOutros('');
+    setDocumentoNovaNegociacao('');
+    setSigaDocFile('');
   };
 
   const handleEdit = (penhora: Penhora) => {
@@ -331,6 +406,24 @@ function App() {
     setTotalDebt(penhora.totalDebt || 0);
     setOrdemImplantacao(penhora.ordemImplantacao || 1);
     setStatus(penhora.status || 'Ativo');
+    
+    // Set Banking Data
+    setBanco(penhora.banco || '');
+    setAgencia(penhora.agencia || '');
+    setConta(penhora.conta || '');
+    setTipoPagamento(penhora.tipoPagamento || 'Conta Corrente');
+    setFavorecidoNome(penhora.favorecidoNome || '');
+    setFavorecidoCpfCnpj(penhora.favorecidoCpfCnpj || '');
+    setCredorDataNascimento(penhora.credorDataNascimento || '');
+    setCredorCpf(penhora.credorCpf || '');
+    
+    // Set Status Details
+    setDataInativacao(penhora.dataInativacao || '');
+    setMotivoInativacao(penhora.motivoInativacao || '');
+    setMotivoOutros(penhora.motivoOutros || '');
+    setDocumentoNovaNegociacao(penhora.documentoNovaNegociacao || '');
+    setSigaDocFile(penhora.sigaDocFile || '');
+
     setSelectedBonds(['1']); // Pre-select a bond to show calculation result
 
     setActiveScreen('form');
@@ -593,7 +686,7 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="form-row">
+                    <div className="form-row" style={{ gridTemplateColumns: '1.2fr 1.2fr 0.8fr' }}>
                       <div className="form-group">
                         <label className="form-label">Número do Processo</label>
                         <input
@@ -605,14 +698,37 @@ function App() {
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">SigaDoc</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="Ex: SEFAZ-PRO-2024/00001"
-                          value={sigaDoc}
-                          onChange={(e) => setSigaDoc(e.target.value)}
-                        />
+                        <label className="form-label">SigaDoc (Processo Digital)</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Ex: SEFAZ-PRO-2024/00001"
+                            value={sigaDoc}
+                            onChange={(e) => setSigaDoc(e.target.value)}
+                            style={{ flex: 1 }}
+                          />
+                        </div>
+                        {sigaDocFile && <small style={{ color: '#059669', fontWeight: 600, marginTop: '4px', display: 'block' }}>📎 {sigaDocFile}</small>}
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Modelo de Ofício</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <label className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0 1rem', height: '38px', fontSize: '0.75rem', background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569' }}>
+                            <FileText size={16} />
+                            {oficioTemplate || 'Upload Modelo'}
+                            <input 
+                              type="file" 
+                              accept=".doc,.docx,.pdf" 
+                              style={{ display: 'none' }} 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setOficioTemplate(e.target.files[0].name);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
                       </div>
                     </div>
 
@@ -667,10 +783,10 @@ function App() {
                             style={{ background: 'white' }}
                           >
                             <option value="Ativo">🟢 Ativo (Em andamento)</option>
+                            <option value="Inativo">🔴 Inativo (Suspensão/Alteração)</option>
                             <option value="Encerrado">⚪ Encerrado (Prazo concluído)</option>
                             <option value="Quitado">✅ Quitado (Pagamento total)</option>
                             <option value="Acordo Judicial">🤝 Acordo Judicial</option>
-                            <option value="Suspenso">🟠 Suspenso (Aguardando decisão)</option>
                           </select>
                         </div>
                         <div className="form-group">
@@ -709,6 +825,56 @@ function App() {
                         <textarea className="form-textarea" rows={2} placeholder="Detalhes adicionais da ordem judicial..." style={{ minHeight: '80px' }}></textarea>
                       </div>
                     )}
+                  </div>
+
+                  <div className="card">
+                    <h2 className="card-title">
+                      <Building2 size={18} />
+                      Dados Bancários do Beneficiário
+                    </h2>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Nome do Favorecido</label>
+                        <input type="text" className="form-input" value={favorecidoNome} onChange={e => setFavorecidoNome(e.target.value)} placeholder="Nome completo" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">CPF/CNPJ do Favorecido</label>
+                        <input type="text" className="form-input" value={favorecidoCpfCnpj} onChange={e => setFavorecidoCpfCnpj(e.target.value)} placeholder="000.000.000-00" />
+                      </div>
+                    </div>
+                    <div className="form-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr' }}>
+                      <div className="form-group">
+                        <label className="form-label">Banco</label>
+                        <input type="text" className="form-input" value={banco} onChange={e => setBanco(e.target.value)} placeholder="Ex: Banco do Brasil" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Agência</label>
+                        <input type="text" className="form-input" value={agencia} onChange={e => setAgencia(e.target.value)} placeholder="0000" />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Número da Conta</label>
+                        <input type="text" className="form-input" value={conta} onChange={e => setConta(e.target.value)} placeholder="00000-0" />
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Tipo de Pagamento</label>
+                        <select className="form-input" value={tipoPagamento} onChange={e => setTipoPagamento(e.target.value)}>
+                          <option>Conta Corrente</option>
+                          <option>Conta Poupança</option>
+                          <option>PIX</option>
+                          <option>Ordem de Pagamento</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Data de Nascimento (Credor)</label>
+                        <input type="date" className="form-input" value={credorDataNascimento} onChange={e => setCredorDataNascimento(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">CPF do Credor (FIPLAN)</label>
+                        <input type="text" className="form-input" value={credorCpf} onChange={e => setCredorCpf(e.target.value)} placeholder="000.000.000-00" />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="card">
@@ -1260,6 +1426,15 @@ function App() {
                                           <button 
                                             className="dropdown-item" 
                                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                            onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setShowOficioModal(true); setOpenDropdownId(null); }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                          >
+                                            <FileText size={14} color="#059669" /> Gerar Ofício
+                                          </button>
+                                          <button 
+                                            className="dropdown-item" 
+                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
                                             onClick={(e) => { e.stopPropagation(); handleEdit(item); setOpenDropdownId(null); }}
                                             onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
                                             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
@@ -1334,6 +1509,30 @@ function App() {
                           {viewingPenhora.status}
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {viewingPenhora.status === 'Inativo' && (
+                    <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#FEF2F2', borderRadius: '8px', border: '1px solid #FECACA' }}>
+                      <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#991B1B', marginBottom: '0.5rem' }}>DETALHES DA INATIVAÇÃO</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem' }}>
+                        <div><strong>Data:</strong> {formatDateBR(viewingPenhora.dataInativacao || '')}</div>
+                        <div><strong>Motivo:</strong> {viewingPenhora.motivoInativacao}</div>
+                        {viewingPenhora.motivoOutros && <div style={{ gridColumn: 'span 2' }}><strong>Específico:</strong> {viewingPenhora.motivoOutros}</div>}
+                        {viewingPenhora.documentoNovaNegociacao && <div style={{ gridColumn: 'span 2', color: '#B91C1C', fontWeight: 600 }}>📎 Doc. Nova Negociação: {viewingPenhora.documentoNovaNegociacao}</div>}
+                      </div>
+                    </div>
+                  )}
+
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem' }}>Dados Bancários do Beneficiário</h3>
+                  <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '8px', border: '1px solid #E2E8F0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>FAVORECIDO</label>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.favorecidoNome || '-'}</div>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>BANCO / AG / CONTA</label>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.banco || '-'} / {viewingPenhora.agencia || '-'} / {viewingPenhora.conta || '-'}</div>
                     </div>
                   </div>
 
@@ -1457,6 +1656,14 @@ function App() {
                 </button>
                 <button
                   className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#059669' }}
+                  onClick={() => setShowOficioModal(true)}
+                >
+                  <FileText size={16} />
+                  Gerar Ofício SEFAZ
+                </button>
+                <button
+                  className="btn btn-primary"
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0F172A' }}
                   onClick={() => handleEdit(viewingPenhora)}
                 >
@@ -1505,10 +1712,10 @@ function App() {
                   {status === 'Quitado' ? <CheckCircle size={32} /> : status === 'Suspenso' ? <AlertTriangle size={32} /> : <Handshake size={32} />}
                 </div>
                 <h2 style={{ fontSize: '1.5rem', color: '#1E293B', fontWeight: 800, marginBottom: '0.5rem' }}>
-                  {status === 'Quitado' ? 'Registrar Quitação' : status === 'Suspenso' ? 'Suspender Penhora' : 'Acordo Judicial'}
+                  {status === 'Quitado' ? 'Registrar Quitação' : status === 'Inativo' ? 'Inativar Registro' : status === 'Suspenso' ? 'Suspender Penhora' : 'Acordo Judicial'}
                 </h2>
                 <p style={{ fontSize: '0.9rem', color: '#64748B' }}>
-                  {status === 'Quitado' ? 'Confirme o valor total pago para encerrar o processo.' : status === 'Suspenso' ? 'Informe o motivo e se houve amortização parcial.' : 'Registre os termos do acordo e valores negociados.'}
+                  {status === 'Quitado' ? 'Confirme o valor total pago para encerrar o processo.' : status === 'Inativo' ? 'Obrigatório informar data, motivo e novo documento.' : status === 'Suspenso' ? 'Informe o motivo e se houve amortização parcial.' : 'Registre os termos do acordo e valores negociados.'}
                 </p>
               </div>
 
@@ -1579,6 +1786,49 @@ function App() {
                   </div>
                 </div>
 
+                {status === 'Inativo' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', background: '#FEF2F2', borderRadius: '12px', border: '1px solid #FECACA' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 700 }}>Data da Inativação</label>
+                      <input type="date" className="form-input" value={dataInativacao} onChange={e => setDataInativacao(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 700 }}>Motivo da Inativação</label>
+                      <select className="form-input" value={motivoInativacao} onChange={e => setMotivoInativacao(e.target.value)}>
+                        <option value="">Selecione um motivo...</option>
+                        <option value="Suspenso">Suspenso</option>
+                        <option value="Alteração de valor ou regra">Alteração de valor ou regra</option>
+                        <option value="Outros">Outros</option>
+                      </select>
+                    </div>
+                    {motivoInativacao === 'Outros' && (
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: 700 }}>Especifique o Motivo</label>
+                        <textarea className="form-input" value={motivoOutros} onChange={e => setMotivoOutros(e.target.value)} maxLength={255} placeholder="Descreva o motivo..."></textarea>
+                      </div>
+                    )}
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: 700 }}>Documento para Nova Negociação (PDF)</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <label className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0 1rem', height: '38px', fontSize: '0.75rem', background: 'white' }}>
+                          <File size={16} />
+                          {documentoNovaNegociacao || 'Upload Novo Documento'}
+                          <input 
+                            type="file" 
+                            accept=".pdf" 
+                            style={{ display: 'none' }} 
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                setDocumentoNovaNegociacao(e.target.files[0].name);
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700, color: '#475569' }}>Motivo / Observações Detalhadas</label>
                   <textarea 
@@ -1608,14 +1858,23 @@ function App() {
                       flex: 2, 
                       height: '48px', 
                       fontWeight: 700, 
-                      background: status === 'Quitado' ? '#3B82F6' : status === 'Suspenso' ? '#F97316' : '#6366F1'
+                      background: status === 'Quitado' ? '#3B82F6' : status === 'Inativo' ? '#EF4444' : status === 'Suspenso' ? '#F97316' : '#6366F1',
+                      opacity: (status === 'Inativo' && (!dataInativacao || !motivoInativacao || !documentoNovaNegociacao)) ? 0.5 : 1
                     }}
+                    disabled={status === 'Inativo' && (!dataInativacao || !motivoInativacao || !documentoNovaNegociacao)}
                     onClick={() => {
                       const newTotal = Math.max(0, totalDebt - earlyPayoffValue);
                       setTotalDebt(newTotal);
-                      if (newTotal === 0 && status !== 'Quitado' && status !== 'Suspenso') {
-                        setStatus('Quitado');
+                      if (newTotal === 0 && status !== 'Inativo') {
+                        setStatus('Encerrado');
                       }
+                      
+                      // Special logic for "Alteração de valor ou regra"
+                      if (status === 'Inativo' && motivoInativacao === 'Alteração de valor ou regra') {
+                        // In a real app, we would version here. For this demo, we'll just allow the user to continue editing.
+                        alert('🔄 Registro inativado para alteração. Você poderá atualizar os parâmetros agora.');
+                      }
+
                       setShowPayoffModal(false);
                       // Disparar o salvamento automático para registrar a ação
                       setTimeout(() => {
@@ -1625,6 +1884,101 @@ function App() {
                   >
                     Confirmar Alteração
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showOficioModal && viewingPenhora && (
+          <div className="oficio-print-container" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
+            <div className="oficio-paper" style={{ background: 'white', width: '210mm', minHeight: '297mm', padding: '20mm', boxShadow: '0 0 20px rgba(0,0,0,0.5)', position: 'relative', margin: 'auto' }}>
+              <button 
+                onClick={() => setShowOficioModal(false)}
+                style={{ position: 'absolute', right: '-50px', top: '0', background: '#EF4444', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                className="hide-on-print"
+              >
+                <X size={24} />
+              </button>
+              
+              <button 
+                onClick={() => window.print()}
+                style={{ position: 'absolute', right: '-50px', top: '60px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                className="hide-on-print"
+              >
+                <Printer size={24} />
+              </button>
+
+              {/* Ofício Content */}
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Bras%C3%A3o_de_Mato_Grosso.svg/200px-Bras%C3%A3o_de_Mato_Grosso.svg.png" alt="Brasão MT" style={{ width: '80px', marginBottom: '1rem' }} />
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>ESTADO DE MATO GROSSO</h2>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>SECRETARIA DE ESTADO DE PLANEJAMENTO E GESTÃO</h3>
+              </div>
+
+              <div style={{ marginBottom: '2rem', textAlign: 'right' }}>
+                Cuiabá-MT, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <strong>OFÍCIO Nº ____ / SEPLAG / {new Date().getFullYear()}</strong>
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                Ao Senhor,<br />
+                <strong>SECRETÁRIO DE ESTADO DE FAZENDA - SEFAZ</strong><br />
+                Nesta Capital
+              </div>
+
+              <div style={{ marginBottom: '2rem', textAlign: 'justify', lineHeight: '1.6' }}>
+                Assunto: <strong>SOLICITAÇÃO DE IMPLANTAÇÃO DE PENHORA JUDICIAL - FIPLAN</strong>
+              </div>
+
+              <div style={{ marginBottom: '2rem', textAlign: 'justify', lineHeight: '1.6' }}>
+                Senhor Secretário,
+              </div>
+
+              <div style={{ marginBottom: '2rem', textAlign: 'justify', lineHeight: '1.6' }}>
+                Solicitamos a Vossa Senhoria as providências necessárias para a implantação/atualização da penhora judicial no sistema FIPLAN, referente ao servidor abaixo identificado, conforme decisão proferida no processo judicial supracitado:
+              </div>
+
+              <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.9rem' }}>
+                  <div><strong>Servidor:</strong> {viewingPenhora.servidor}</div>
+                  <div><strong>Matrícula:</strong> {viewingPenhora.matricula}</div>
+                  <div><strong>CPF:</strong> {viewingPenhora.cpf}</div>
+                  <div><strong>Processo:</strong> {viewingPenhora.processo}</div>
+                  <div><strong>Vara:</strong> {viewingPenhora.vara}</div>
+                  <div><strong>Valor da Penhora:</strong> {viewingPenhora.valor} ({viewingPenhora.tipo})</div>
+                  <div><strong>Competência:</strong> {new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}</div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <strong>DADOS BANCÁRIOS DO BENEFICIÁRIO:</strong>
+              </div>
+
+              <div style={{ background: '#F8FAFC', padding: '1.5rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.9rem' }}>
+                  <div><strong>Favorecido:</strong> {viewingPenhora.favorecidoNome || '-'}</div>
+                  <div><strong>CPF/CNPJ:</strong> {viewingPenhora.favorecidoCpfCnpj || '-'}</div>
+                  <div><strong>Banco:</strong> {viewingPenhora.banco || '-'}</div>
+                  <div><strong>Agência:</strong> {viewingPenhora.agencia || '-'}</div>
+                  <div><strong>Conta:</strong> {viewingPenhora.conta || '-'}</div>
+                  <div><strong>Tipo:</strong> {viewingPenhora.tipoPagamento || '-'}</div>
+                  <div><strong>Nascimento Credor:</strong> {viewingPenhora.credorDataNascimento ? formatDateBR(viewingPenhora.credorDataNascimento) : '-'}</div>
+                  <div><strong>CPF Credor (FIPLAN):</strong> {viewingPenhora.credorCpf || '-'}</div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '4rem', textAlign: 'justify', lineHeight: '1.6' }}>
+                Atenciosamente,
+              </div>
+
+              <div style={{ textAlign: 'center', marginTop: '4rem' }}>
+                <div style={{ borderTop: '1px solid black', width: '250px', margin: '0 auto', paddingTop: '0.5rem' }}>
+                  <strong>CARLOS VITOR</strong><br />
+                  Gestor de Penhoras - SEPLAG/MT
                 </div>
               </div>
             </div>

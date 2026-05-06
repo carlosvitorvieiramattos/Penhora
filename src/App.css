@@ -439,3 +439,28 @@
 .history-scroll::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+@media print {
+  .app-wrapper > *:not(.oficio-print-container) {
+    display: none !important;
+  }
+  .oficio-print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .oficio-paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+    width: 100% !important;
+    padding: 20mm !important;
+  }
+  .hide-on-print {
+    display: none !important;
+  }
+}
