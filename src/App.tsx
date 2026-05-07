@@ -27,7 +27,8 @@ import {
   Calendar,
   History,
   FileText,
-  Printer
+  Printer,
+  Landmark
 } from 'lucide-react';
 import './App.css';
 
@@ -42,6 +43,7 @@ interface Bond {
   pensao: number;
   irrf: number;
   outrasPenhoras: number;
+  status: 'Ativo' | 'Inativo';
 }
 
 interface HistoryEntry {
@@ -81,6 +83,8 @@ interface Penhora {
   favorecidoCpfCnpj?: string;
   credorDataNascimento?: string;
   credorCpf?: string;
+  tipoChavePix?: string;
+  chavePix?: string;
   // Status Details
   dataInativacao?: string;
   motivoInativacao?: string;
@@ -90,8 +94,22 @@ interface Penhora {
 
 // Mock data for the user bonds
 const mockBonds: Bond[] = [
-  { id: '1', role: 'Analista de Sistemas', department: 'SEFAZ', type: 'Efetivo', gross: 10899.45, prev: 1144.44, pensao: 0, irrf: 1773.91, outrasPenhoras: 1200 },
-  { id: '2', role: 'Professor Substituto', department: 'SEDUC', type: 'Contratado', gross: 4200, prev: 588, pensao: 0, irrf: 250, outrasPenhoras: 0 }
+  { id: '1', role: 'Analista de Sistemas', department: 'SEFAZ', type: 'Efetivo', gross: 10899.45, prev: 1144.44, pensao: 0, irrf: 1773.91, outrasPenhoras: 1200, status: 'Ativo' },
+  { id: '2', role: 'Professor Substituto', department: 'SEDUC', type: 'Contratado', gross: 4200, prev: 588, pensao: 0, irrf: 250, outrasPenhoras: 0, status: 'Ativo' },
+];
+
+interface Consignado {
+  id: string;
+  banco: string;
+  contrato: string;
+  valorParcela: number;
+  parcelasRestantes: number;
+  status: 'Ativo' | 'Suspenso';
+}
+
+const mockConsignados: Consignado[] = [
+  { id: '1', banco: 'Banco do Brasil', contrato: '001234567', valorParcela: 450.00, parcelasRestantes: 24, status: 'Ativo' },
+  { id: '2', banco: 'Caixa Econômica', contrato: '009876543', valorParcela: 890.50, parcelasRestantes: 48, status: 'Ativo' },
 ];
 
 // Helper functions for currency masking
@@ -140,6 +158,7 @@ const formatDateBR = (dateString: string) => {
 
 function App() {
   const [selectedBonds, setSelectedBonds] = useState<string[]>(['1']);
+  const [selectedConsignados, setSelectedConsignados] = useState<string[]>([]);
   const [calculationType, setCalculationType] = useState<'percentage_gross' | 'percentage_net' | 'fixed'>('percentage_net');
   const [cpfServidor, setCpfServidor] = useState<string>('');
   const [percentage, setPercentage] = useState<number>(30);
@@ -189,6 +208,8 @@ function App() {
   const [favorecidoCpfCnpj, setFavorecidoCpfCnpj] = useState<string>('');
   const [credorDataNascimento, setCredorDataNascimento] = useState<string>('');
   const [credorCpf, setCredorCpf] = useState<string>('');
+  const [tipoChavePix, setTipoChavePix] = useState<string>('CPF/CNPJ');
+  const [chavePix, setChavePix] = useState<string>('');
 
   // Status Details State
   const [dataInativacao, setDataInativacao] = useState<string>('');
@@ -237,6 +258,12 @@ function App() {
   const toggleServerExpand = (servidor: string) => {
     setExpandedServers(prev =>
       prev.includes(servidor) ? prev.filter(s => s !== servidor) : [...prev, servidor]
+    );
+  };
+
+  const toggleConsignado = (id: string) => {
+    setSelectedConsignados(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
     );
   };
 
@@ -289,6 +316,8 @@ function App() {
         favorecidoCpfCnpj,
         credorDataNascimento,
         credorCpf,
+        tipoChavePix,
+        chavePix,
         // Status Details
         dataInativacao,
         motivoInativacao,
@@ -320,6 +349,7 @@ function App() {
     setManualPensao(0);
     setManualIRRF(0);
     setSelectedBonds([]);
+    setSelectedConsignados([]);
     setIncide13(true);
     setIncideFerias(true);
     setIncideRescisao(false);
@@ -361,6 +391,8 @@ function App() {
     setFavorecidoCpfCnpj('');
     setCredorDataNascimento('');
     setCredorCpf('');
+    setTipoChavePix('CPF/CNPJ');
+    setChavePix('');
     // Reset Status Details
     setDataInativacao('');
     setMotivoInativacao('');
@@ -416,6 +448,8 @@ function App() {
     setFavorecidoCpfCnpj(penhora.favorecidoCpfCnpj || '');
     setCredorDataNascimento(penhora.credorDataNascimento || '');
     setCredorCpf(penhora.credorCpf || '');
+    setTipoChavePix(penhora.tipoChavePix || 'CPF/CNPJ');
+    setChavePix(penhora.chavePix || '');
     
     // Set Status Details
     setDataInativacao(penhora.dataInativacao || '');
@@ -464,6 +498,11 @@ function App() {
     const pensao = selected.reduce((sum, b) => sum + b.pensao, 0);
     const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
     const outrasPenhoras = selected.reduce((sum, b) => sum + (b.outrasPenhoras || 0), 0);
+    
+    // Sum of selected consignados
+    const consignadosVal = mockConsignados
+      .filter(c => selectedConsignados.includes(c.id))
+      .reduce((sum, c) => sum + c.valorParcela, 0);
 
     // Applying dynamic deductions
     let finalGross = gross;
@@ -479,11 +518,12 @@ function App() {
       - (deductPensao ? pensao : 0)
       - (deductIRRF ? irrf : 0)
       - (deductOutras ? outrasPenhoras : 0)
+      - consignadosVal
       - sindicatoVal
       - outrosVal;
 
-    return { gross: finalGross, prev, pensao, irrf, outrasPenhoras, sindicato: sindicatoVal, outrosDescontos: outrosVal, net, baseDebt: totalDebt };
-  }, [selectedBonds, deductPrev, deductPensao, deductIRRF, deductOutras, salaryMethod, manualGross, manualPrev, manualPensao, manualIRRF, incide13, incideFerias, incideRescisao, totalDebt, outrasVerbasFixas, incideOutrasVariaveis, outrasVerbasVariaveis, deductSindicato, valorSindicato, deductOutrosDescontos, valorOutrosDescontos, useSalarioMinimo]);
+    return { gross: finalGross, prev, pensao, irrf, outrasPenhoras, consignados: consignadosVal, sindicato: sindicatoVal, outrosDescontos: outrosVal, net, baseDebt: totalDebt };
+  }, [selectedBonds, selectedConsignados, deductPrev, deductPensao, deductIRRF, deductOutras, salaryMethod, manualGross, manualPrev, manualPensao, manualIRRF, incide13, incideFerias, incideRescisao, totalDebt, outrasVerbasFixas, incideOutrasVariaveis, outrasVerbasVariaveis, deductSindicato, valorSindicato, deductOutrosDescontos, valorOutrosDescontos, useSalarioMinimo]);
 
   // Calculate final discount
   const finalDiscount = useMemo(() => {
@@ -842,21 +882,7 @@ function App() {
                         <input type="text" className="form-input" value={favorecidoCpfCnpj} onChange={e => setFavorecidoCpfCnpj(e.target.value)} placeholder="000.000.000-00" />
                       </div>
                     </div>
-                    <div className="form-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr' }}>
-                      <div className="form-group">
-                        <label className="form-label">Banco</label>
-                        <input type="text" className="form-input" value={banco} onChange={e => setBanco(e.target.value)} placeholder="Ex: Banco do Brasil" />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Agência</label>
-                        <input type="text" className="form-input" value={agencia} onChange={e => setAgencia(e.target.value)} placeholder="0000" />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Número da Conta</label>
-                        <input type="text" className="form-input" value={conta} onChange={e => setConta(e.target.value)} placeholder="00000-0" />
-                      </div>
-                    </div>
-                    <div className="form-row">
+                    <div className="form-row" style={{ gridTemplateColumns: (tipoPagamento === 'Conta Corrente' || tipoPagamento === 'Conta Poupança') ? '1fr 1.5fr 1fr 1fr' : tipoPagamento === 'PIX' ? '1fr 1fr 1.5fr' : '1fr 2fr' }}>
                       <div className="form-group">
                         <label className="form-label">Tipo de Pagamento</label>
                         <select className="form-input" value={tipoPagamento} onChange={e => setTipoPagamento(e.target.value)}>
@@ -866,64 +892,170 @@ function App() {
                           <option>Ordem de Pagamento</option>
                         </select>
                       </div>
-                      <div className="form-group">
-                        <label className="form-label">Data de Nascimento (Credor)</label>
-                        <input type="date" className="form-input" value={credorDataNascimento} onChange={e => setCredorDataNascimento(e.target.value)} />
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">CPF do Credor (FIPLAN)</label>
-                        <input type="text" className="form-input" value={credorCpf} onChange={e => setCredorCpf(e.target.value)} placeholder="000.000.000-00" />
-                      </div>
+
+                      {(tipoPagamento === 'Conta Corrente' || tipoPagamento === 'Conta Poupança') && (
+                        <>
+                          <div className="form-group">
+                            <label className="form-label">Banco</label>
+                            <input type="text" className="form-input" value={banco} onChange={e => setBanco(e.target.value)} placeholder="Ex: Banco do Brasil" />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Agência</label>
+                            <input type="text" className="form-input" value={agencia} onChange={e => setAgencia(e.target.value)} placeholder="0000" />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Número da Conta</label>
+                            <input type="text" className="form-input" value={conta} onChange={e => setConta(e.target.value)} placeholder="00000-0" />
+                          </div>
+                        </>
+                      )}
+
+                      {tipoPagamento === 'PIX' && (
+                        <>
+                          <div className="form-group">
+                            <label className="form-label">Tipo de Chave Pix</label>
+                            <select className="form-input" value={tipoChavePix} onChange={e => setTipoChavePix(e.target.value)}>
+                              <option>CPF/CNPJ</option>
+                              <option>Celular</option>
+                              <option>E-mail</option>
+                              <option>Chave Aleatória</option>
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Chave Pix</label>
+                            <input type="text" className="form-input" value={chavePix} onChange={e => setChavePix(e.target.value)} placeholder="Insira a chave Pix" />
+                          </div>
+                        </>
+                      )}
+
+                      {tipoPagamento === 'Ordem de Pagamento' && (
+                        <div className="form-group">
+                          <label className="form-label">Banco</label>
+                          <input type="text" className="form-input" value={banco} onChange={e => setBanco(e.target.value)} placeholder="Ex: Banco do Brasil" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <h2 className="card-title" style={{ marginBottom: 0 }}>
-                        <Briefcase size={18} />
-                        Seleção de Vínculos
-                      </h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                    <div className="card" style={{ margin: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h2 className="card-title" style={{ marginBottom: 0 }}>
+                          <Briefcase size={18} />
+                          Seleção de Vínculos
+                        </h2>
+                        {cpfServidor.replace(/\D/g, '').length >= 11 && (
+                          <button 
+                            onClick={() => {
+                              const allActive = mockBonds.filter(b => b.status === 'Ativo').map(b => b.id);
+                              setSelectedBonds(selectedBonds.length === allActive.length ? [] : allActive);
+                            }}
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.7rem', padding: '4px 8px', height: '28px', color: 'var(--primary-color)', fontWeight: 700 }}
+                          >
+                            {selectedBonds.length === mockBonds.filter(b => b.status === 'Ativo').length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                          </button>
+                        )}
+                      </div>
+
+                      <>
+                        {cpfServidor.replace(/\D/g, '').length >= 11 ? (
+                          <div className="bonds-list">
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                              Marque os vínculos onde a penhora deverá incidir. O sistema fará a somatória automaticamente.
+                            </p>
+                            {mockBonds.filter(b => b.status === 'Ativo').map((bond) => {
+                              const isSelected = selectedBonds.includes(bond.id);
+                              const netBaseLegal = bond.gross - bond.prev - bond.pensao - bond.irrf;
+                              const net = netBaseLegal - (bond.outrasPenhoras || 0);
+                              return (
+                                <div
+                                  key={bond.id}
+                                  className={`bond-item ${isSelected ? 'selected' : ''}`}
+                                  onClick={() => toggleBond(bond.id)}
+                                >
+                                  <div className="checkbox-custom">
+                                    {isSelected && <Check size={12} color="white" />}
+                                  </div>
+                                  <div className="bond-info">
+                                    <div className="bond-title">{bond.role}</div>
+                                    <div className="bond-subtitle">{bond.department} • {bond.type}</div>
+                                  </div>
+                                  <div className="bond-salary">
+                                    <div className="bond-gross">R$ {bond.gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                                    <div className="bond-net">Líquido: R$ {net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: '#F8FAFC', borderRadius: '6px', border: '1px dashed #CBD5E1' }}>
+                            <Search size={24} style={{ margin: '0 auto 0.5rem', opacity: 0.3 }} />
+                            <p style={{ fontSize: '0.85rem' }}>Aguardando preenchimento do CPF...</p>
+                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Os vínculos ativos serão listados aqui.</p>
+                          </div>
+                        )}
+                      </>
                     </div>
 
-                    <>
-                      {cpfServidor.replace(/\D/g, '').length >= 11 ? (
-                        <div className="bonds-list">
-                          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                            Marque os vínculos onde a penhora deverá incidir. O sistema fará a somatória automaticamente.
-                          </p>
-                          {mockBonds.map(bond => {
-                            const isSelected = selectedBonds.includes(bond.id);
-                            const netBaseLegal = bond.gross - bond.prev - bond.pensao - bond.irrf;
-                            const net = netBaseLegal - (bond.outrasPenhoras || 0);
-                            return (
-                              <div
-                                key={bond.id}
-                                className={`bond-item ${isSelected ? 'selected' : ''}`}
-                                onClick={() => toggleBond(bond.id)}
-                              >
-                                <div className="checkbox-custom">
-                                  {isSelected && <Check size={12} color="white" />}
+                    <div className="card" style={{ margin: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h2 className="card-title" style={{ marginBottom: 0 }}>
+                          <Landmark size={18} />
+                          Seleção de Consignados
+                        </h2>
+                        {cpfServidor.replace(/\D/g, '').length >= 11 && (
+                          <button 
+                            onClick={() => {
+                              const allActive = mockConsignados.filter(c => c.status === 'Ativo').map(c => c.id);
+                              setSelectedConsignados(selectedConsignados.length === allActive.length ? [] : allActive);
+                            }}
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.7rem', padding: '4px 8px', height: '28px', color: '#EF4444', fontWeight: 700 }}
+                          >
+                            {selectedConsignados.length === mockConsignados.filter(c => c.status === 'Ativo').length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                          </button>
+                        )}
+                      </div>
+
+                      <>
+                        {cpfServidor.replace(/\D/g, '').length >= 11 ? (
+                          <div className="bonds-list">
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                              Selecione os empréstimos consignados atrelados a este CPF que devem ser considerados/suspensos por esta penhora.
+                            </p>
+                            {mockConsignados.filter(c => c.status === 'Ativo').map((consig) => {
+                              const isSelected = selectedConsignados.includes(consig.id);
+                              return (
+                                <div
+                                  key={consig.id}
+                                  className={`bond-item ${isSelected ? 'selected' : ''}`}
+                                  onClick={() => toggleConsignado(consig.id)}
+                                >
+                                  <div className="checkbox-custom">
+                                    {isSelected && <Check size={12} color="white" />}
+                                  </div>
+                                  <div className="bond-info">
+                                    <div className="bond-title">{consig.banco}</div>
+                                    <div className="bond-subtitle">Contrato: {consig.contrato} • Restam {consig.parcelasRestantes} parcelas</div>
+                                  </div>
+                                  <div className="bond-salary">
+                                    <div className="bond-gross" style={{ color: '#EF4444' }}>- R$ {consig.valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                                  </div>
                                 </div>
-                                <div className="bond-info">
-                                  <div className="bond-title">{bond.role}</div>
-                                  <div className="bond-subtitle">{bond.department} • {bond.type}</div>
-                                </div>
-                                <div className="bond-salary">
-                                  <div className="bond-gross">R$ {bond.gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                                  <div className="bond-net">Líquido: R$ {net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: '#F8FAFC', borderRadius: '6px', border: '1px dashed #CBD5E1' }}>
-                          <Search size={24} style={{ margin: '0 auto 0.5rem', opacity: 0.3 }} />
-                          <p style={{ fontSize: '0.85rem' }}>Aguardando preenchimento do CPF...</p>
-                          <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Os vínculos ativos serão listados aqui.</p>
-                        </div>
-                      )}
-                    </>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: '#F8FAFC', borderRadius: '6px', border: '1px dashed #CBD5E1' }}>
+                            <Search size={24} style={{ margin: '0 auto 0.5rem', opacity: 0.3 }} />
+                            <p style={{ fontSize: '0.85rem' }}>Aguardando preenchimento do CPF...</p>
+                            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Os consignados ativos serão listados aqui.</p>
+                          </div>
+                        )}
+                      </>
+                    </div>
                   </div>
 
                 </div>
@@ -1214,6 +1346,14 @@ function App() {
                           <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem' }}>IRRF</div></div>
                           <div className="bond-salary"><div className="bond-gross" style={{ fontSize: '0.8rem', color: '#EF4444' }}>- R$ {totals.irrf.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div></div>
                         </div>
+
+                        {totals.consignados > 0 && (
+                          <div className="bond-item selected" style={{ padding: '0.6rem 1rem', cursor: 'default', background: '#FEF2F2', border: '1px solid #FEE2E2' }}>
+                            <div className="checkbox-custom"><Check size={12} color="white" /></div>
+                            <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem', color: '#991B1B' }}>Consignados (Descontados)</div></div>
+                            <div className="bond-salary"><div className="bond-gross" style={{ fontSize: '0.8rem', color: '#EF4444', fontWeight: 700 }}>- R$ {totals.consignados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div></div>
+                          </div>
+                        )}
 
                         <div className="calc-row total" style={{ marginTop: '0.5rem', borderTop: '1px dashed #CBD5E1', paddingTop: '0.75rem', padding: '0.75rem' }}>
                           <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>BASE LÍQUIDA FINAL:</span>
@@ -1871,8 +2011,28 @@ function App() {
                       
                       // Special logic for "Alteração de valor ou regra"
                       if (status === 'Inativo' && motivoInativacao === 'Alteração de valor ou regra') {
-                        // In a real app, we would version here. For this demo, we'll just allow the user to continue editing.
-                        alert('🔄 Registro inativado para alteração. Você poderá atualizar os parâmetros agora.');
+                        if (editingPenhora) {
+                          const now = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                          const inativoEntry = {
+                            id: Date.now().toString(),
+                            date: now,
+                            status: 'Inativo',
+                            action: 'Alteração de Regra',
+                            observation: payoffObservations || 'Inativado para alteração de valor ou regra. Documento: ' + documentoNovaNegociacao
+                          };
+                          setEditingPenhora({
+                            ...editingPenhora,
+                            history: [...(editingPenhora.history || []), inativoEntry]
+                          });
+                        }
+                        setStatus('Ativo');
+                        setDataInativacao('');
+                        setMotivoInativacao('');
+                        setDocumentoNovaNegociacao('');
+                        setPayoffObservations('');
+                        setShowPayoffModal(false);
+                        alert('🔄 Histórico preservado (Inativado). Você pode agora atualizar os valores e salvar a nova versão da penhora.');
+                        return;
                       }
 
                       setShowPayoffModal(false);
