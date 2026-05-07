@@ -68,6 +68,7 @@ interface Penhora {
   ordemImplantacao: number;
   sigaDoc?: string;
   sigaDocFile?: string;
+  oficioFile?: string;
   observacoes?: string;
   history: HistoryEntry[];
   // Banking Data
@@ -160,13 +161,13 @@ const calculateTotalsForPenhora = (penhora: Penhora) => {
   const pensao = selected.reduce((sum, b) => sum + b.pensao, 0);
   const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
   const outrasPenhoras = selected.reduce((sum, b) => sum + (b.outrasPenhoras || 0), 0);
-  
+
   const consignadosVal = mockConsignados
     .filter(c => (penhora.selectedConsignados || []).includes(c.id))
     .reduce((sum, c) => sum + c.valorParcela, 0);
 
   const net = baseGross - prev - pensao - irrf - outrasPenhoras - consignadosVal;
-  
+
   let discount = 0;
   if (penhora.tipo === 'Porcentagem') {
     const perc = parseFloat(penhora.valor.replace('%', ''));
@@ -200,11 +201,23 @@ const ALL_INCIDENTS = [
 ];
 
 const formatDateBR = (dateString: string) => {
-  if (!dateString) return '-';
+  if (!dateString || dateString === '-') return '-';
   if (dateString.includes('/')) return dateString; // Already in BR format
   const [year, month, day] = dateString.split('-');
   if (!year || !month || !day) return dateString;
   return `${day}/${month}/${year}`;
+};
+
+const formatCompetencia = (dateString: string) => {
+  if (!dateString || dateString === '-') return '-';
+  if (dateString.includes('/')) {
+    const parts = dateString.split('/');
+    if (parts.length === 3) return `${parts[1]}/${parts[2]}`;
+    return dateString;
+  }
+  const [year, month] = dateString.split('-');
+  if (!year || !month) return dateString;
+  return `${month}/${year}`;
 };
 
 function App() {
@@ -323,9 +336,9 @@ function App() {
       alert('⚠️ Atenção: Para lançar a penhora, é obrigatório preencher o CPF, o Número do Processo e o Valor Total da Dívida.');
       return;
     }
-    
+
     setIsSaving(true);
-    
+
     const now = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     // Simulate API call
@@ -356,6 +369,7 @@ function App() {
         ordemImplantacao: ordemImplantacao,
         sigaDoc: sigaDoc,
         sigaDocFile: sigaDocFile,
+        oficioFile: oficioTemplate,
         observacoes: payoffObservations,
         history: editingPenhora ? [...(editingPenhora.history || []), historyEntry] : [historyEntry],
         // Banking Data
@@ -386,7 +400,7 @@ function App() {
 
       setIsSaving(false);
       setShowSuccess(true);
-      
+
       setTimeout(() => {
         setShowSuccess(false);
         setActiveScreen('list');
@@ -491,7 +505,7 @@ function App() {
     setTotalDebt(penhora.totalDebt || 0);
     setOrdemImplantacao(penhora.ordemImplantacao || 1);
     setStatus(penhora.status || 'Ativo');
-    
+
     // Set Banking Data
     setBanco(penhora.banco || '');
     setAgencia(penhora.agencia || '');
@@ -505,7 +519,10 @@ function App() {
     setChavePix(penhora.chavePix || '');
     setSelectedConsignados(penhora.selectedConsignados || []);
     setSelectedBonds(penhora.selectedBonds || ['1']);
-    
+    setSigaDoc(penhora.sigaDoc || '');
+    setSigaDocFile(penhora.sigaDocFile || '');
+    setOficioTemplate(penhora.oficioFile || '');
+
     // Set Status Details
     setDataInativacao(penhora.dataInativacao || '');
     setMotivoInativacao(penhora.motivoInativacao || '');
@@ -547,12 +564,12 @@ function App() {
 
       const sindicatoVal = deductSindicato ? valorSindicato : 0;
       const outrosVal = deductOutrosDescontos ? valorOutrosDescontos : 0;
-      const net = finalGross 
-        - (deductPrev ? prev : 0) 
-        - (deductPensao ? pensao : 0) 
-        - (deductIRRF ? irrf : 0) 
+      const net = finalGross
+        - (deductPrev ? prev : 0)
+        - (deductPensao ? pensao : 0)
+        - (deductIRRF ? irrf : 0)
         - consignadosVal
-        - sindicatoVal 
+        - sindicatoVal
         - outrosVal;
       return { gross: finalGross, prev, pensao, irrf, outrasPenhoras: 0, consignados: consignadosVal, sindicato: sindicatoVal, outrosDescontos: outrosVal, net };
     }
@@ -564,7 +581,7 @@ function App() {
     const pensao = selected.reduce((sum, b) => sum + b.pensao, 0);
     const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
     const outrasPenhoras = selected.reduce((sum, b) => sum + (b.outrasPenhoras || 0), 0);
-    
+
     // Applying dynamic deductions
     let finalGross = gross;
     if (incide13) finalGross += gross;
@@ -621,7 +638,7 @@ function App() {
       const eYear = end.getFullYear();
       const eMonth = String(end.getMonth() + 1).padStart(2, '0');
       const eDay = String(end.getDate()).padStart(2, '0');
-      
+
       const newDate = `${eYear}-${eMonth}-${eDay}`;
       if (dataTerminoForm !== newDate) {
         setDataTerminoForm(newDate);
@@ -813,15 +830,15 @@ function App() {
                         {sigaDocFile && <small style={{ color: '#059669', fontWeight: 600, marginTop: '4px', display: 'block' }}>📎 {sigaDocFile}</small>}
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Modelo de Ofício</label>
+                        <label className="form-label">Ofício</label>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <label className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0 1rem', height: '38px', fontSize: '0.75rem', background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569' }}>
                             <FileText size={16} />
-                            {oficioTemplate || 'Upload Modelo'}
-                            <input 
-                              type="file" 
-                              accept=".doc,.docx,.pdf" 
-                              style={{ display: 'none' }} 
+                            {oficioTemplate || 'Anexo'}
+                            <input
+                              type="file"
+                              accept=".doc,.docx,.pdf"
+                              style={{ display: 'none' }}
                               onChange={(e) => {
                                 if (e.target.files && e.target.files[0]) {
                                   setOficioTemplate(e.target.files[0].name);
@@ -845,7 +862,7 @@ function App() {
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Data de Início</label>
+                        <label className="form-label">Mês / Competência</label>
                         <input
                           type="month"
                           className="form-input"
@@ -868,8 +885,8 @@ function App() {
                       <div className="form-row" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
                         <div className="form-group">
                           <label className="form-label">Situação do Registro</label>
-                          <select 
-                            className="form-input" 
+                          <select
+                            className="form-input"
                             value={status}
                             onChange={(e) => {
                               const newStatus = e.target.value;
@@ -892,10 +909,10 @@ function App() {
                         </div>
                         <div className="form-group">
                           <label className="form-label">Observações Internas (Complementos)</label>
-                          <textarea 
-                            className="form-textarea" 
-                            rows={1} 
-                            placeholder="Ex: Acordo judicial realizado em audiência..." 
+                          <textarea
+                            className="form-textarea"
+                            rows={1}
+                            placeholder="Ex: Acordo judicial realizado em audiência..."
                             style={{ height: '38px' }}
                             value={payoffObservations}
                             onChange={(e) => setPayoffObservations(e.target.value)}
@@ -910,8 +927,8 @@ function App() {
                           <div style={{ fontSize: '0.75rem', color: '#991B1B', fontWeight: 600 }}>QUITAÇÃO REGISTRADA</div>
                           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#991B1B' }}>R$ {formatCurrencyInput(earlyPayoffValue)}</div>
                         </div>
-                        <button 
-                          className="btn btn-secondary" 
+                        <button
+                          className="btn btn-secondary"
                           style={{ fontSize: '0.75rem', padding: '4px 10px', height: '28px', color: '#991B1B', borderColor: '#FECACA' }}
                           onClick={() => setShowPayoffModal(true)}
                         >
@@ -1006,7 +1023,7 @@ function App() {
                           Seleção de Vínculos
                         </h2>
                         {cpfServidor.replace(/\D/g, '').length >= 11 && (
-                          <button 
+                          <button
                             onClick={() => {
                               const allActive = mockBonds.filter(b => b.status === 'Ativo').map(b => b.id);
                               setSelectedBonds(selectedBonds.length === allActive.length ? [] : allActive);
@@ -1067,7 +1084,7 @@ function App() {
                           Seleção de Consignados
                         </h2>
                         {cpfServidor.replace(/\D/g, '').length >= 11 && (
-                          <button 
+                          <button
                             onClick={() => {
                               const allActive = mockConsignados.filter(c => c.status === 'Ativo').map(c => c.id);
                               setSelectedConsignados(selectedConsignados.length === allActive.length ? [] : allActive);
@@ -1222,7 +1239,7 @@ function App() {
                         )}
                       </div>
                     </div>
-                                      {/* Seletor Consolidado de Incidências */}
+                    {/* Seletor Consolidado de Incidências */}
                     <div className="form-group" style={{ marginTop: '0.5rem', marginBottom: '1.5rem' }}>
                       <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         Incidências e Bases de Cálculo
@@ -1264,7 +1281,7 @@ function App() {
                               <X size={12} onClick={(e) => { e.stopPropagation(); setIncideOutrasVariaveis(false); }} />
                             </span>
                           )}
-                          
+
                           {/* System Variables Tags */}
                           {selectedIncidents.map(inc => (
                             <span key={inc} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', background: '#F1F5F9', color: '#475569', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600, border: '1px solid #E2E8F0' }}>
@@ -1276,7 +1293,7 @@ function App() {
                           {!incide13 && !incideFerias && !incideRescisao && !incideOutrasVariaveis && selectedIncidents.length === 0 && (
                             <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Selecione as incidências (Folhas, Bases, Alíquotas)...</span>
                           )}
-                          
+
                           <div style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             {(incide13 || incideFerias || incideRescisao || incideOutrasVariaveis || selectedIncidents.length > 0) && (
                               <X size={14} style={{ color: '#94A3B8' }} onClick={(e) => { e.stopPropagation(); setIncide13(false); setIncideFerias(false); setIncideRescisao(false); setIncideOutrasVariaveis(false); setSelectedIncidents([]); }} />
@@ -1312,7 +1329,7 @@ function App() {
                               {incidentSearch === '' && (
                                 <div style={{ padding: '8px 12px 4px', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Folhas Principais</div>
                               )}
-                              
+
                               {[
                                 { id: 'inc13', label: '13º Salário', checked: incide13, toggle: () => setIncide13(!incide13) },
                                 { id: 'incFer', label: 'Férias + 1/3 Constitucional', checked: incideFerias, toggle: () => setIncideFerias(!incideFerias) },
@@ -1337,7 +1354,7 @@ function App() {
 
                               {/* Variables Section */}
                               <div style={{ padding: '12px 12px 4px', fontSize: '0.65rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', borderTop: '1px solid #F1F5F9' }}>Variáveis e Bases Sistêmicas</div>
-                              
+
                               {ALL_INCIDENTS.filter(inc => inc.toLowerCase().includes(incidentSearch.toLowerCase())).map(inc => {
                                 const isSelected = selectedIncidents.includes(inc);
                                 return (
@@ -1550,106 +1567,106 @@ function App() {
 
                           <div className="table-responsive-container">
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                            <thead>
-                              <tr style={{ background: 'white', borderBottom: '1px solid #F1F5F9', textAlign: 'left' }}>
-                                <th style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#475569' }}>Processo</th>
-                                <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Vara Judicial</th>
-                                <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Base de Cálculo</th>
+                              <thead>
+                                <tr style={{ background: 'white', borderBottom: '1px solid #F1F5F9', textAlign: 'left' }}>
+                                  <th style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#475569' }}>Processo</th>
+                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Vara Judicial</th>
+                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Base de Cálculo</th>
 
-                                <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Data Início</th>
-                                <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Data Término</th>
-                                <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Situação</th>
-                                <th style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Ações</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {penhoras.map((item, idx) => (
-                                <tr
-                                  key={item.id}
-                                  style={{ borderBottom: idx === penhoras.length - 1 ? 'none' : '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#F8FAFC' }}
-                                >
-                                  <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{item.processo}</td>
-                                  <td style={{ padding: '1rem 1rem' }}>{item.vara}</td>
-                                  <td style={{ padding: '1rem 1rem' }}>
-                                    <div style={{ fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                      <span style={{
-                                        fontSize: '0.65rem',
-                                        padding: '1px 6px',
-                                        borderRadius: '4px',
-                                        background: item.tipo === 'Porcentagem' ? '#EEF2FF' : '#F1F5F9',
-                                        color: item.tipo === 'Porcentagem' ? '#4338CA' : '#475569',
-                                        border: '1px solid currentColor',
-                                        fontWeight: 700
-                                      }}>
-                                        {item.tipo === 'Fixo' ? 'VALOR FIXO' : 'PORCENTAGEM'}
-                                      </span>
-                                    </div>
-                                  </td>
-
-                                  <td style={{ padding: '1rem 1rem' }}>{formatDateBR(item.dataInicio)}</td>
-                                  <td style={{ padding: '1rem 1rem' }}>{formatDateBR(item.dataTermino)}</td>
-                                  <td style={{ padding: '1rem 1rem' }}>
-                                    <span style={{
-                                      padding: '0.25rem 0.75rem',
-                                      borderRadius: '999px',
-                                      fontSize: '0.7rem',
-                                      fontWeight: 700,
-                                      background: item.status === 'Ativo' ? '#DCFCE7' : item.status === 'Encerrado' ? '#F1F5F9' : '#FEE2E2',
-                                      color: item.status === 'Ativo' ? '#166534' : item.status === 'Encerrado' ? '#475569' : '#991B1B'
-                                    }}>
-                                      {item.status.toUpperCase()}
-                                    </span>
-                                  </td>
-
-                                  <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
-                                    <div className="split-btn-group" style={{ position: 'relative', display: 'inline-flex' }}>
-                                      <button
-                                        className="btn btn-primary split-btn-main"
-                                        style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, padding: '5px 12px', height: '30px', background: '#1E88E5', border: 'none', display: 'flex', alignItems: 'center' }}
-                                        onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setOpenDropdownId(null); }}
-                                        title="Visualizar"
-                                      >
-                                        <Eye size={16} />
-                                      </button>
-                                      <button
-                                        className="btn btn-primary split-btn-trigger"
-                                        style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, padding: '5px 6px', height: '30px', background: '#1E88E5', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
-                                        onClick={(e) => { 
-                                          e.stopPropagation(); 
-                                          setOpenDropdownId(openDropdownId === item.id ? null : item.id); 
-                                        }}
-                                      >
-                                        <ChevronDown size={14} />
-                                      </button>
-
-                                      {openDropdownId === item.id && (
-                                        <div className="action-dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 50, minWidth: '130px', display: 'flex', flexDirection: 'column', border: '1px solid #E2E8F0', padding: '4px 0' }}>
-                                          <button 
-                                            className="dropdown-item" 
-                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
-                                            onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setShowOficioModal(true); setOpenDropdownId(null); }}
-                                            onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
-                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                                          >
-                                            <FileText size={14} color="#059669" /> Gerar Ofício
-                                          </button>
-                                          <button 
-                                            className="dropdown-item" 
-                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
-                                            onClick={(e) => { e.stopPropagation(); handleEdit(item); setOpenDropdownId(null); }}
-                                            onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
-                                            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                                          >
-                                            <Pencil size={14} color="#64748B" /> Editar
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
+                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Mês/Competência</th>
+                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Data Término</th>
+                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Situação</th>
+                                  <th style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Ações</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {penhoras.map((item, idx) => (
+                                  <tr
+                                    key={item.id}
+                                    style={{ borderBottom: idx === penhoras.length - 1 ? 'none' : '1px solid #F1F5F9', background: idx % 2 === 0 ? 'white' : '#F8FAFC' }}
+                                  >
+                                    <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{item.processo}</td>
+                                    <td style={{ padding: '1rem 1rem' }}>{item.vara}</td>
+                                    <td style={{ padding: '1rem 1rem' }}>
+                                      <div style={{ fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span style={{
+                                          fontSize: '0.65rem',
+                                          padding: '1px 6px',
+                                          borderRadius: '4px',
+                                          background: item.tipo === 'Porcentagem' ? '#EEF2FF' : '#F1F5F9',
+                                          color: item.tipo === 'Porcentagem' ? '#4338CA' : '#475569',
+                                          border: '1px solid currentColor',
+                                          fontWeight: 700
+                                        }}>
+                                          {item.tipo === 'Fixo' ? 'VALOR FIXO' : 'PORCENTAGEM'}
+                                        </span>
+                                      </div>
+                                    </td>
+
+                                    <td style={{ padding: '1rem 1rem' }}>{formatCompetencia(item.dataInicio)}</td>
+                                    <td style={{ padding: '1rem 1rem' }}>{formatDateBR(item.dataTermino)}</td>
+                                    <td style={{ padding: '1rem 1rem' }}>
+                                      <span style={{
+                                        padding: '0.25rem 0.75rem',
+                                        borderRadius: '999px',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        background: item.status === 'Ativo' ? '#DCFCE7' : item.status === 'Encerrado' ? '#F1F5F9' : '#FEE2E2',
+                                        color: item.status === 'Ativo' ? '#166534' : item.status === 'Encerrado' ? '#475569' : '#991B1B'
+                                      }}>
+                                        {item.status.toUpperCase()}
+                                      </span>
+                                    </td>
+
+                                    <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
+                                      <div className="split-btn-group" style={{ position: 'relative', display: 'inline-flex' }}>
+                                        <button
+                                          className="btn btn-primary split-btn-main"
+                                          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, padding: '5px 12px', height: '30px', background: '#1E88E5', border: 'none', display: 'flex', alignItems: 'center' }}
+                                          onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setOpenDropdownId(null); }}
+                                          title="Visualizar"
+                                        >
+                                          <Eye size={16} />
+                                        </button>
+                                        <button
+                                          className="btn btn-primary split-btn-trigger"
+                                          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, padding: '5px 6px', height: '30px', background: '#1E88E5', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenDropdownId(openDropdownId === item.id ? null : item.id);
+                                          }}
+                                        >
+                                          <ChevronDown size={14} />
+                                        </button>
+
+                                        {openDropdownId === item.id && (
+                                          <div className="action-dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', zIndex: 50, minWidth: '130px', display: 'flex', flexDirection: 'column', border: '1px solid #E2E8F0', padding: '4px 0' }}>
+                                            <button
+                                              className="dropdown-item"
+                                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                              onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setShowOficioModal(true); setOpenDropdownId(null); }}
+                                              onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                              <FileText size={14} color="#059669" /> Gerar Ofício
+                                            </button>
+                                            <button
+                                              className="dropdown-item"
+                                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                              onClick={(e) => { e.stopPropagation(); handleEdit(item); setOpenDropdownId(null); }}
+                                              onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                              <Pencil size={14} color="#64748B" /> Editar
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       )}
@@ -1693,8 +1710,8 @@ function App() {
                     </div>
                     <div className="modal-inner-grid">
                       <div>
-                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>DATA INÍCIO</label>
-                        <div style={{ fontWeight: 600 }}>{viewingPenhora.dataInicio}</div>
+                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>MÊS/COMPETÊNCIA </label>
+                        <div style={{ fontWeight: 600 }}>{formatCompetencia(viewingPenhora.dataInicio)}</div>
                       </div>
                       <div>
                         <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>DATA TÉRMINO</label>
@@ -1778,10 +1795,10 @@ function App() {
                     {(viewingPenhora.history || []).slice().reverse().map((entry, idx, arr) => (
                       <div key={entry.id} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <div style={{ 
-                            width: '10px', 
-                            height: '10px', 
-                            borderRadius: '50%', 
+                          <div style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
                             background: idx === 0 ? 'var(--primary-color)' : '#94A3B8',
                             zIndex: 1,
                             marginTop: '6px'
@@ -1858,12 +1875,12 @@ function App() {
                       borderRadius: '999px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      background: viewingPenhora.status === 'Ativo' ? '#DCFCE7' : 
-                                 viewingPenhora.status === 'Suspenso' ? '#FFEDD5' :
-                                 viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#F1F5F9' : '#DBEAFE',
-                      color: viewingPenhora.status === 'Ativo' ? '#15803D' : 
-                             viewingPenhora.status === 'Suspenso' ? '#9A3412' :
-                             viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#475569' : '#1E40AF'
+                      background: viewingPenhora.status === 'Ativo' ? '#DCFCE7' :
+                        viewingPenhora.status === 'Suspenso' ? '#FFEDD5' :
+                          viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#F1F5F9' : '#DBEAFE',
+                      color: viewingPenhora.status === 'Ativo' ? '#15803D' :
+                        viewingPenhora.status === 'Suspenso' ? '#9A3412' :
+                          viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#475569' : '#1E40AF'
                     }}>
                       {viewingPenhora.status === 'Ativo' ? 'LANÇAMENTO EM FOLHA' : viewingPenhora.status.toUpperCase()}
                     </span>
@@ -1882,12 +1899,15 @@ function App() {
                   className="btn btn-primary"
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6' }}
                   onClick={() => {
-                    const dataToPrint = viewingPenhora;
-                    alert(`Imprimindo comprovante de: ${dataToPrint.servidor}`);
+                    if (viewingPenhora.oficioFile) {
+                      alert(`Baixando anexo: ${viewingPenhora.oficioFile}`);
+                    } else {
+                      alert('Nenhum anexo disponível para este registro.');
+                    }
                   }}
                 >
-                  <Save size={16} />
-                  Imprimir Comprovante
+                  <FileText size={16} />
+                  Baixar Anexo
                 </button>
                 <button
                   className="btn btn-primary"
@@ -1914,33 +1934,33 @@ function App() {
         <div className="footer">
           SEPLAG - STI - Coordenadoria de Sistemas
         </div>
-        
+
         {/* Status Management Modal (UX Refined) */}
         {showPayoffModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.75)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', backdropFilter: 'blur(4px)' }}>
-            <div className="card" style={{ 
-              maxWidth: '550px', 
-              width: '100%', 
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', 
+            <div className="card" style={{
+              maxWidth: '550px',
+              width: '100%',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
               border: status === 'Quitado' ? '2px solid #3B82F6' : status === 'Suspenso' ? '2px solid #F97316' : '2px solid #6366F1',
               padding: 0,
               overflow: 'hidden'
             }}>
-              <div style={{ 
-                padding: '1.5rem', 
+              <div style={{
+                padding: '1.5rem',
                 background: status === 'Quitado' ? '#EFF6FF' : status === 'Suspenso' ? '#FFF7ED' : '#F5F3FF',
                 borderBottom: '1px solid ' + (status === 'Quitado' ? '#DBEAFE' : status === 'Suspenso' ? '#FFEDD5' : '#EDE9FE'),
-                textAlign: 'center' 
+                textAlign: 'center'
               }}>
-                <div style={{ 
-                  background: status === 'Quitado' ? '#3B82F6' : status === 'Suspenso' ? '#F97316' : '#6366F1', 
-                  color: 'white', 
-                  width: '56px', 
-                  height: '56px', 
-                  borderRadius: '16px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
+                <div style={{
+                  background: status === 'Quitado' ? '#3B82F6' : status === 'Suspenso' ? '#F97316' : '#6366F1',
+                  color: 'white',
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   margin: '0 auto 1rem',
                   boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
                 }}>
@@ -1966,24 +1986,24 @@ function App() {
                       onChange={e => setEarlyPayoffValue(parseCurrencyInput(e.target.value))}
                       placeholder="0,00"
                       autoFocus
-                      style={{ 
-                        fontSize: '2rem', 
-                        fontWeight: '800', 
-                        color: '#1E293B', 
-                        paddingLeft: '3.5rem', 
+                      style={{
+                        fontSize: '2rem',
+                        fontWeight: '800',
+                        color: '#1E293B',
+                        paddingLeft: '3.5rem',
                         height: '70px',
                         borderRadius: '12px',
                         border: '2px solid #E2E8F0'
                       }}
                     />
                   </div>
-                  
+
                   {/* UX Indicator: Amortização vs Quitação */}
-                  <div style={{ 
-                    marginTop: '1rem', 
-                    padding: '1rem', 
-                    borderRadius: '12px', 
-                    background: '#F8FAFC', 
+                  <div style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    background: '#F8FAFC',
                     border: '1px solid #E2E8F0',
                     display: 'flex',
                     flexDirection: 'column',
@@ -1993,18 +2013,18 @@ function App() {
                       <span style={{ fontSize: '0.85rem', color: '#64748B' }}>Saldo Devedor Atual:</span>
                       <span style={{ fontWeight: 600 }}>R$ {totalDebt.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                     </div>
-                    
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '0.85rem', color: '#64748B' }}>Saldo Remanescente:</span>
-                      <span style={{ 
-                        fontWeight: 800, 
+                      <span style={{
+                        fontWeight: 800,
                         color: earlyPayoffValue >= totalDebt ? '#059669' : '#1E293B'
                       }}>
                         R$ {Math.max(0, totalDebt - earlyPayoffValue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
 
-                    <div style={{ 
+                    <div style={{
                       marginTop: '0.5rem',
                       padding: '0.75rem',
                       borderRadius: '8px',
@@ -2048,10 +2068,10 @@ function App() {
                         <label className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0 1rem', height: '38px', fontSize: '0.75rem', background: 'white' }}>
                           <File size={16} />
                           {documentoNovaNegociacao || 'Upload Novo Documento'}
-                          <input 
-                            type="file" 
-                            accept=".pdf" 
-                            style={{ display: 'none' }} 
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            style={{ display: 'none' }}
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 setDocumentoNovaNegociacao(e.target.files[0].name);
@@ -2066,9 +2086,9 @@ function App() {
 
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700, color: '#475569' }}>Motivo / Observações Detalhadas</label>
-                  <textarea 
-                    className="form-textarea" 
-                    rows={3} 
+                  <textarea
+                    className="form-textarea"
+                    rows={3}
                     placeholder="Descreva aqui os detalhes desta alteração para o histórico..."
                     style={{ borderRadius: '12px', padding: '1rem' }}
                     value={payoffObservations}
@@ -2089,10 +2109,10 @@ function App() {
                   </button>
                   <button
                     className="btn btn-primary"
-                    style={{ 
-                      flex: 2, 
-                      height: '48px', 
-                      fontWeight: 700, 
+                    style={{
+                      flex: 2,
+                      height: '48px',
+                      fontWeight: 700,
                       background: status === 'Quitado' ? '#3B82F6' : status === 'Inativo' ? '#EF4444' : status === 'Suspenso' ? '#F97316' : '#6366F1',
                       opacity: (status === 'Inativo' && (!dataInativacao || !motivoInativacao || !documentoNovaNegociacao)) ? 0.5 : 1
                     }}
@@ -2103,7 +2123,7 @@ function App() {
                       if (newTotal === 0 && status !== 'Inativo') {
                         setStatus('Encerrado');
                       }
-                      
+
                       // Special logic for "Alteração de valor ou regra"
                       if (status === 'Inativo' && motivoInativacao === 'Alteração de valor ou regra') {
                         if (editingPenhora) {
@@ -2148,15 +2168,15 @@ function App() {
         {showOficioModal && viewingPenhora && (
           <div className="oficio-print-container" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
             <div className="oficio-paper" style={{ background: 'white', width: '210mm', minHeight: '297mm', padding: '20mm', boxShadow: '0 0 20px rgba(0,0,0,0.5)', position: 'relative', margin: 'auto' }}>
-              <button 
+              <button
                 onClick={() => setShowOficioModal(false)}
                 style={{ position: 'absolute', right: '-50px', top: '0', background: '#EF4444', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                 className="hide-on-print"
               >
                 <X size={24} />
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => window.print()}
                 style={{ position: 'absolute', right: '-50px', top: '60px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                 className="hide-on-print"
