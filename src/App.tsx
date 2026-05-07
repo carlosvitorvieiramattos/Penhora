@@ -21,11 +21,7 @@ import {
   AlertTriangle,
   Handshake,
   File,
-  Download,
   Building2,
-  CreditCard,
-  Calendar,
-  History,
   FileText,
   Printer,
   Landmark
@@ -96,7 +92,7 @@ interface Penhora {
 
 // Mock data for the user bonds
 const mockBonds: Bond[] = [
-  { id: '1', role: 'Analista de Sistemas', department: 'SEFAZ', type: 'Efetivo', gross: 10899.45, prev: 1144.44, pensao: 0, irrf: 1773.91, outrasPenhoras: 1200, status: 'Ativo' },
+  { id: '1', role: 'Analista de Sistemas', department: 'SEFAZ', type: 'Efetivo', gross: 10899.45, prev: 1144.44, pensao: 850.00, irrf: 1773.91, outrasPenhoras: 1200, status: 'Ativo' },
   { id: '2', role: 'Professor Substituto', department: 'SEDUC', type: 'Contratado', gross: 4200, prev: 588, pensao: 0, irrf: 250, outrasPenhoras: 0, status: 'Ativo' },
 ];
 
@@ -157,12 +153,37 @@ const formatProcesso = (value: string) => {
     .replace(/(\.\d{4})\d+?$/, '$1');
 };
 
+const calculateTotalsForPenhora = (penhora: Penhora) => {
+  const selected = mockBonds.filter(b => (penhora.selectedBonds || ['1']).includes(b.id));
+  const baseGross = selected.reduce((sum, b) => sum + b.gross, 0);
+  const prev = selected.reduce((sum, b) => sum + b.prev, 0);
+  const pensao = selected.reduce((sum, b) => sum + b.pensao, 0);
+  const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
+  const outrasPenhoras = selected.reduce((sum, b) => sum + (b.outrasPenhoras || 0), 0);
+  
+  const consignadosVal = mockConsignados
+    .filter(c => (penhora.selectedConsignados || []).includes(c.id))
+    .reduce((sum, c) => sum + c.valorParcela, 0);
+
+  const net = baseGross - prev - pensao - irrf - outrasPenhoras - consignadosVal;
+  
+  let discount = 0;
+  if (penhora.tipo === 'Porcentagem') {
+    const perc = parseFloat(penhora.valor.replace('%', ''));
+    discount = (penhora.base === 'Bruto' ? baseGross : net) * (perc / 100);
+  } else {
+    discount = parseFloat(penhora.valor.replace('R$ ', '').replace('.', '').replace(',', '.'));
+  }
+
+  return { gross: baseGross, prev, pensao, irrf, outrasPenhoras, consignados: consignadosVal, net, discount };
+};
+
 const INITIAL_MOCK_PENHORAS: Penhora[] = [
-  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }], favorecidoNome: 'Maria Joaquina', banco: 'Banco do Brasil', agencia: '1234', conta: '56789-0' },
-  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], favorecidoNome: 'João Silva', banco: 'Caixa Econômica', agencia: '4321', conta: '98765-4' },
-  { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1, history: [{ id: 'h3', date: '10/10/2021 08:15', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }, { id: 'h4', date: '10/10/2023 18:00', status: 'Encerrado', action: 'Atualização de Status', observation: 'Processo encerrado por decurso de prazo.' }] },
-  { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h5', date: '01/03/2024 11:20', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
-  { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2, history: [{ id: 'h6', date: '10/04/2024 16:45', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }] },
+  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }], favorecidoNome: 'Maria Joaquina', banco: 'Banco do Brasil', agencia: '1234', conta: '56789-0', selectedBonds: ['1'], selectedConsignados: [] },
+  { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], favorecidoNome: 'João Silva', banco: 'Caixa Econômica', agencia: '4321', conta: '98765-4', selectedBonds: ['1'], selectedConsignados: [] },
+  { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1, history: [{ id: 'h3', date: '10/10/2021 08:15', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }, { id: 'h4', date: '10/10/2023 18:00', status: 'Encerrado', action: 'Atualização de Status', observation: 'Processo encerrado por decurso de prazo.' }], selectedBonds: ['1'], selectedConsignados: [] },
+  { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h5', date: '01/03/2024 11:20', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], selectedBonds: ['1'], selectedConsignados: [] },
+  { id: '5', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0055555-44.2024.8.11.0001', valor: '10%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/04/2024', dataTermino: '10/04/2025', status: 'Ativo', vara: '4ª Vara Cível', totalDebt: 2500, ordemImplantacao: 2, history: [{ id: 'h6', date: '10/04/2024 16:45', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], selectedBonds: ['1'], selectedConsignados: [] },
 ];
 
 const ALL_INCIDENTS = [
@@ -507,6 +528,11 @@ function App() {
 
   // Calculate totals based on selected bonds
   const totals = useMemo(() => {
+    // Sum of selected consignados (available in all modes)
+    const consignadosVal = mockConsignados
+      .filter(c => selectedConsignados.includes(c.id))
+      .reduce((sum, c) => sum + c.valorParcela, 0);
+
     if (salaryMethod === 'manual') {
       const gross = useSalarioMinimo ? salarioMinimoValor : (manualGross + outrasVerbasFixas);
       const prev = manualPrev;
@@ -521,8 +547,14 @@ function App() {
 
       const sindicatoVal = deductSindicato ? valorSindicato : 0;
       const outrosVal = deductOutrosDescontos ? valorOutrosDescontos : 0;
-      const net = finalGross - (deductPrev ? prev : 0) - (deductPensao ? pensao : 0) - (deductIRRF ? irrf : 0) - sindicatoVal - outrosVal;
-      return { gross: finalGross, prev, pensao, irrf, outrasPenhoras: 0, sindicato: sindicatoVal, outrosDescontos: outrosVal, net };
+      const net = finalGross 
+        - (deductPrev ? prev : 0) 
+        - (deductPensao ? pensao : 0) 
+        - (deductIRRF ? irrf : 0) 
+        - consignadosVal
+        - sindicatoVal 
+        - outrosVal;
+      return { gross: finalGross, prev, pensao, irrf, outrasPenhoras: 0, consignados: consignadosVal, sindicato: sindicatoVal, outrosDescontos: outrosVal, net };
     }
 
     const selected = mockBonds.filter(b => selectedBonds.includes(b.id));
@@ -533,11 +565,6 @@ function App() {
     const irrf = selected.reduce((sum, b) => sum + b.irrf, 0);
     const outrasPenhoras = selected.reduce((sum, b) => sum + (b.outrasPenhoras || 0), 0);
     
-    // Sum of selected consignados
-    const consignadosVal = mockConsignados
-      .filter(c => selectedConsignados.includes(c.id))
-      .reduce((sum, c) => sum + c.valorParcela, 0);
-
     // Applying dynamic deductions
     let finalGross = gross;
     if (incide13) finalGross += gross;
@@ -820,10 +847,10 @@ function App() {
                       <div className="form-group">
                         <label className="form-label">Data de Início</label>
                         <input
-                          type="date"
+                          type="month"
                           className="form-input"
-                          value={dataInicioForm}
-                          onChange={(e) => setDataInicioForm(e.target.value)}
+                          value={dataInicioForm ? dataInicioForm.substring(0, 7) : ''}
+                          onChange={(e) => setDataInicioForm(e.target.value ? `${e.target.value}-01` : '')}
                         />
                       </div>
                       <div className="form-group">
@@ -1368,9 +1395,9 @@ function App() {
                         </div>
 
                         {totals.pensao > 0 && (
-                          <div className={`bond-item ${deductPensao ? 'selected' : ''}`} onClick={() => setDeductPensao(!deductPensao)} style={{ padding: '0.6rem 1rem' }}>
-                            <div className="checkbox-custom">{deductPensao && <Check size={12} color="white" />}</div>
-                            <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem' }}>Pensão Alimentícia</div></div>
+                          <div className="bond-item selected" style={{ padding: '0.6rem 1rem', cursor: 'default' }}>
+                            <div className="checkbox-custom"><Check size={12} color="white" /></div>
+                            <div className="bond-info"><div className="bond-title" style={{ fontSize: '0.8rem' }}>Pensão Alimentícia (Obrigatória)</div></div>
                             <div className="bond-salary"><div className="bond-gross" style={{ fontSize: '0.8rem', color: '#EF4444' }}>- R$ {totals.pensao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div></div>
                           </div>
                         )}
@@ -1705,9 +1732,20 @@ function App() {
                       <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.favorecidoNome || '-'}</div>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>BANCO / AG / CONTA</label>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.banco || '-'} / {viewingPenhora.agencia || '-'} / {viewingPenhora.conta || '-'}</div>
+                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>FORMA DE PAGAMENTO</label>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.tipoPagamento || 'Transferência Bancária'}</div>
                     </div>
+                    {viewingPenhora.tipoPagamento === 'PIX' ? (
+                      <div>
+                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>CHAVE PIX ({viewingPenhora.tipoChavePix})</label>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.chavePix || '-'}</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>BANCO / AG / CONTA</label>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.banco || '-'} / {viewingPenhora.agencia || '-'} / {viewingPenhora.conta || '-'}</div>
+                      </div>
+                    )}
                   </div>
 
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem' }}>Vínculos Atingidos</h3>
@@ -1780,27 +1818,38 @@ function App() {
                 <div style={{ background: '#F1F5F9', padding: '1.5rem', borderRadius: '12px', border: '1px solid #CBD5E1' }}>
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1E293B', marginBottom: '1.5rem', textAlign: 'center' }}>MEMÓRIA DE CÁLCULO</h3>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span>Soma Brutos:</span>
-                      <span style={{ fontWeight: 600 }}>R$ 14.500,00</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#EF4444' }}>
-                      <span>Deduções Legais:</span>
-                      <span>- R$ 3.840,00</span>
-                    </div>
-                    <div style={{ margin: '0.5rem 0', borderTop: '1px dashed #CBD5E1' }}></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700 }}>
-                      <span>BASE LÍQUIDA:</span>
-                      <span>R$ 10.660,00</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginTop: '1rem' }}>
-                      <span>Calculado ({viewingPenhora.valor} - {viewingPenhora.tipo}):</span>
-                      <span style={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: '1.1rem' }}>
-                        {viewingPenhora.tipo === 'Fixo' ? viewingPenhora.valor : 'R$ 3.198,00'}
-                      </span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const vTotals = calculateTotalsForPenhora(viewingPenhora);
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                          <span>Soma Brutos:</span>
+                          <span style={{ fontWeight: 600 }}>R$ {vTotals.gross.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#EF4444' }}>
+                          <span>Deduções Legais:</span>
+                          <span>- R$ {(vTotals.prev + vTotals.pensao + vTotals.irrf + vTotals.outrasPenhoras).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        {vTotals.consignados > 0 && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#EF4444' }}>
+                            <span>Consignados:</span>
+                            <span>- R$ {vTotals.consignados.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                        <div style={{ margin: '0.5rem 0', borderTop: '1px dashed #CBD5E1' }}></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700 }}>
+                          <span>BASE LÍQUIDA:</span>
+                          <span>R$ {vTotals.net.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginTop: '1rem' }}>
+                          <span>Calculado ({viewingPenhora.valor} {viewingPenhora.tipo === 'Porcentagem' ? `s/ ${viewingPenhora.base}` : ''}):</span>
+                          <span style={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: '1.1rem' }}>
+                            R$ {vTotals.discount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div style={{ marginTop: '2rem', padding: '1rem', background: 'white', borderRadius: '8px', textAlign: 'center', border: '1px solid #E2E8F0' }}>
                     <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginBottom: '0.25rem' }}>STATUS DA ORDEM</div>
