@@ -90,6 +90,8 @@ interface Penhora {
   motivoInativacao?: string;
   motivoOutros?: string;
   documentoNovaNegociacao?: string;
+  selectedConsignados?: string[];
+  selectedBonds?: string[];
 }
 
 // Mock data for the user bonds
@@ -351,6 +353,8 @@ function App() {
         motivoInativacao,
         motivoOutros,
         documentoNovaNegociacao,
+        selectedConsignados,
+        selectedBonds,
       };
 
       if (editingPenhora) {
@@ -478,6 +482,8 @@ function App() {
     setCredorCpf(penhora.credorCpf || '');
     setTipoChavePix(penhora.tipoChavePix || 'CPF/CNPJ');
     setChavePix(penhora.chavePix || '');
+    setSelectedConsignados(penhora.selectedConsignados || []);
+    setSelectedBonds(penhora.selectedBonds || ['1']);
     
     // Set Status Details
     setDataInativacao(penhora.dataInativacao || '');
@@ -1706,15 +1712,27 @@ function App() {
 
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem' }}>Vínculos Atingidos</h3>
                   <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <Check size={14} color="#15803D" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Professor - SEDUC (Efetivo)</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Check size={14} color="#15803D" />
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Técnico Administrativo - SES (Interino)</span>
-                    </div>
+                    {mockBonds.filter(b => (viewingPenhora.selectedBonds || ['1']).includes(b.id)).map(bond => (
+                      <div key={bond.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <Check size={14} color="#15803D" />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{bond.role} - {bond.department} ({bond.type})</span>
+                      </div>
+                    ))}
                   </div>
+
+                  {viewingPenhora.selectedConsignados && viewingPenhora.selectedConsignados.length > 0 && (
+                    <>
+                      <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem' }}>Consignados Considerados</h3>
+                      <div style={{ background: '#FEF2F2', padding: '1rem', borderRadius: '8px', border: '1px solid #FEE2E2' }}>
+                        {mockConsignados.filter(c => viewingPenhora.selectedConsignados?.includes(c.id)).map(consig => (
+                          <div key={consig.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <Check size={14} color="#EF4444" />
+                            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#991B1B' }}>{consig.banco} - Contrato {consig.contrato}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   {/* Histórico de Ações */}
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.025em', marginTop: '2rem', marginBottom: '1rem' }}>Histórico de Ações</h3>
