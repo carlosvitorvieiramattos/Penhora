@@ -127,6 +127,34 @@ const parseCurrencyInput = (value: string) => {
   return Number(cleanValue) / 100;
 };
 
+const formatCpfCnpj = (value: string) => {
+  const clean = value.replace(/\D/g, '');
+  if (clean.length <= 11) {
+    return clean
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
+  }
+  return clean
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})/, '$1-$2')
+    .replace(/(-\d{2})\d+?$/, '$1');
+};
+
+const formatProcesso = (value: string) => {
+  const clean = value.replace(/\D/g, '');
+  return clean
+    .replace(/(\d{7})(\d)/, '$1-$2')
+    .replace(/(\d{7}-\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{7}-\d{2}\.\d{4})(\d)/, '$1.$2')
+    .replace(/(\d{7}-\d{2}\.\d{4}\.\d{1})(\d)/, '$1.$2')
+    .replace(/(\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2})(\d)/, '$1.$2')
+    .replace(/(\.\d{4})\d+?$/, '$1');
+};
+
 const INITIAL_MOCK_PENHORAS: Penhora[] = [
   { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }], favorecidoNome: 'Maria Joaquina', banco: 'Banco do Brasil', agencia: '1234', conta: '56789-0' },
   { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], favorecidoNome: 'João Silva', banco: 'Caixa Econômica', agencia: '4321', conta: '98765-4' },
@@ -711,7 +739,7 @@ function App() {
                           placeholder="Somente números..."
                           maxLength={14}
                           value={cpfServidor}
-                          onChange={(e) => setCpfServidor(e.target.value)}
+                          onChange={(e) => setCpfServidor(formatCpfCnpj(e.target.value))}
                         />
                       </div>
                       <div className="form-group">
@@ -734,7 +762,7 @@ function App() {
                           className="form-input"
                           placeholder="0000000-00.0000.0.00.0000"
                           value={numeroProcesso}
-                          onChange={(e) => setNumeroProcesso(e.target.value)}
+                          onChange={(e) => setNumeroProcesso(formatProcesso(e.target.value))}
                         />
                       </div>
                       <div className="form-group">
@@ -879,7 +907,7 @@ function App() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">CPF/CNPJ do Favorecido</label>
-                        <input type="text" className="form-input" value={favorecidoCpfCnpj} onChange={e => setFavorecidoCpfCnpj(e.target.value)} placeholder="000.000.000-00" />
+                        <input type="text" className="form-input" value={favorecidoCpfCnpj} onChange={e => setFavorecidoCpfCnpj(formatCpfCnpj(e.target.value))} placeholder="000.000.000-00" />
                       </div>
                     </div>
                     <div className="form-row" style={{ gridTemplateColumns: (tipoPagamento === 'Conta Corrente' || tipoPagamento === 'Conta Poupança') ? '1fr 1.5fr 1fr 1fr' : tipoPagamento === 'PIX' ? '1fr 1fr 1.5fr' : '1fr 2fr' }}>
