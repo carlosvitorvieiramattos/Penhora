@@ -24,7 +24,8 @@ import {
   Building2,
   FileText,
   Printer,
-  Landmark
+  Landmark,
+  Download
 } from 'lucide-react';
 import './App.css';
 
@@ -154,6 +155,12 @@ const formatProcesso = (value: string) => {
     .replace(/(\.\d{4})\d+?$/, '$1');
 };
 
+const formatMonthYearInput = (value: string) => {
+  const clean = value.replace(/\D/g, '');
+  if (clean.length <= 2) return clean;
+  return `${clean.substring(0, 2)}/${clean.substring(2, 6)}`;
+};
+
 const calculateTotalsForPenhora = (penhora: Penhora) => {
   const selected = mockBonds.filter(b => (penhora.selectedBonds || ['1']).includes(b.id));
   const baseGross = selected.reduce((sum, b) => sum + b.gross, 0);
@@ -260,6 +267,7 @@ function App() {
   const [sigaDoc, setSigaDoc] = useState<string>('');
   const [varaJudicial, setVaraJudicial] = useState<string>('');
   const [dataInicioForm, setDataInicioForm] = useState<string>('');
+  const [competenciaInput, setCompetenciaInput] = useState<string>('');
   const [dataTerminoForm, setDataTerminoForm] = useState<string>('');
   const [status, setStatus] = useState<string>('Ativo');
 
@@ -417,6 +425,9 @@ function App() {
     setManualIRRF(0);
     setSelectedBonds([]);
     setSelectedConsignados([]);
+    setCompetenciaInput('');
+    setDataInicioForm('');
+    setDataTerminoForm('');
     setIncide13(true);
     setIncideFerias(true);
     setIncideRescisao(false);
@@ -522,6 +533,17 @@ function App() {
     setSigaDoc(penhora.sigaDoc || '');
     setSigaDocFile(penhora.sigaDocFile || '');
     setOficioTemplate(penhora.oficioFile || '');
+    if (penhora.dataInicio && penhora.dataInicio !== '-') {
+      if (penhora.dataInicio.includes('/')) {
+        const parts = penhora.dataInicio.split('/');
+        setCompetenciaInput(`${parts[1]}/${parts[2]}`);
+      } else {
+        const parts = penhora.dataInicio.split('-');
+        setCompetenciaInput(`${parts[1]}/${parts[0]}`);
+      }
+    } else {
+      setCompetenciaInput('');
+    }
 
     // Set Status Details
     setDataInativacao(penhora.dataInativacao || '');
@@ -864,10 +886,19 @@ function App() {
                       <div className="form-group">
                         <label className="form-label">Mês / Competência</label>
                         <input
-                          type="month"
+                          type="text"
                           className="form-input"
-                          value={dataInicioForm ? dataInicioForm.substring(0, 7) : ''}
-                          onChange={(e) => setDataInicioForm(e.target.value ? `${e.target.value}-01` : '')}
+                          placeholder="MM/AAAA"
+                          value={competenciaInput}
+                          maxLength={7}
+                          onChange={(e) => {
+                            const val = formatMonthYearInput(e.target.value);
+                            setCompetenciaInput(val);
+                            if (val.length === 7) {
+                              const [m, y] = val.split('/');
+                              setDataInicioForm(`${y}-${m}-01`);
+                            }
+                          }}
                         />
                       </div>
                       <div className="form-group">
@@ -1649,6 +1680,23 @@ function App() {
                                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                                             >
                                               <FileText size={14} color="#059669" /> Gerar Ofício
+                                            </button>
+                                            <button
+                                              className="dropdown-item"
+                                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (item.oficioFile) {
+                                                  alert(`Baixando anexo: ${item.oficioFile}`);
+                                                } else {
+                                                  alert('Nenhum anexo disponível para este registro.');
+                                                }
+                                                setOpenDropdownId(null);
+                                              }}
+                                              onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                              <Download size={14} color="#3B82F6" /> Baixar Anexo
                                             </button>
                                             <button
                                               className="dropdown-item"
