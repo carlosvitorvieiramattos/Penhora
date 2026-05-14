@@ -25,7 +25,8 @@ import {
   FileText,
   Printer,
   Landmark,
-  Download
+  Download,
+  PauseCircle
 } from 'lucide-react';
 import './App.css';
 
@@ -1724,14 +1725,6 @@ function App() {
                                             >
                                               <Pencil size={14} color="#64748B" /> Editar
                                             </button>
-                                            <button
-                                              className="dropdown-item"
-                                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
-                                              onClick={(e) => { e.stopPropagation(); handleEdit(item); setOpenDropdownId(null); }}
-                                              onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
-                                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                                            >
-                                              <PauseCircle size={16} color="#64748B" /> Inativar
                                             </button>
                                           </div>
                                         )}
