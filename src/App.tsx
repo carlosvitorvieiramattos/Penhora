@@ -1670,7 +1670,7 @@ function App() {
                                       <div className="split-btn-group" style={{ position: 'relative', display: 'inline-flex' }}>
                                         <button
                                           className="btn btn-primary split-btn-main"
-                                          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, padding: '5px 12px', height: '30px', background: 'var(--primary-color)', border: 'none', display: 'flex', alignItems: 'center' }}
+                                          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, border: 'none', display: 'flex', alignItems: 'center' }}
                                           onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setOpenDropdownId(null); }}
                                           title="Visualizar"
                                         >
@@ -1678,7 +1678,7 @@ function App() {
                                         </button>
                                         <button
                                           className="btn btn-primary split-btn-trigger"
-                                          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, padding: '5px 6px', height: '30px', background: 'var(--primary-color)', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
+                                          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setOpenDropdownId(openDropdownId === item.id ? null : item.id);

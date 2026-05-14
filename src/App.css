@@ -324,6 +324,19 @@
   border-top: 1px solid var(--panel-border);
 }
 
+.split-btn-group .btn {
+  min-width: unset;
+  height: 32px;
+}
+
+.split-btn-main {
+  padding: 0 10px !important;
+}
+
+.split-btn-trigger {
+  padding: 0 6px !important;
+}
+
 .footer {
   background-color: white;
   padding: 0.5rem 1rem;
