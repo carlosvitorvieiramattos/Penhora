@@ -187,7 +187,7 @@ const calculateTotalsForPenhora = (penhora: Penhora) => {
 };
 
 const INITIAL_MOCK_PENHORAS: Penhora[] = [
-  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }], favorecidoNome: 'Maria Joaquina', banco: 'Banco do Brasil', agencia: '1234', conta: '56789-0', selectedBonds: ['1'], selectedConsignados: [] },
+  { id: '1', servidor: 'ROBERTO JUNIOR', cpf: '123.456.789-00', matricula: '10001', processo: '0012345-67.2023.8.11.0001', valor: '30%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/01/2024', dataTermino: '01/01/2026', status: 'Ativo', vara: '2ª Vara Cível de Cuiabá', totalDebt: 15000, ordemImplantacao: 1, history: [{ id: 'h1', date: '01/01/2024 09:00', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial da penhora judicial.' }], favorecidoNome: 'Maria Joaquina', favorecidoCpfCnpj: '000.000.000-00', credorDataNascimento: '1985-05-20', banco: 'Banco do Brasil', agencia: '1234', conta: '56789-0', selectedBonds: ['1'], selectedConsignados: [] },
   { id: '2', servidor: 'MARIA OLIVEIRA', cpf: '987.654.321-11', matricula: '10002', processo: '0098765-43.2022.8.11.0041', valor: 'R$ 1.550,00', tipo: 'Fixo', base: '-', dataInicio: '15/05/2023', dataTermino: '15/05/2025', status: 'Ativo', vara: '1ª Vara Família', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h2', date: '15/05/2023 14:30', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], favorecidoNome: 'João Silva', banco: 'Caixa Econômica', agencia: '4321', conta: '98765-4', selectedBonds: ['1'], selectedConsignados: [] },
   { id: '3', servidor: 'CARLOS SANTOS', cpf: '456.789.123-22', matricula: '10003', processo: '0045678-90.2021.8.11.0002', valor: '20%', tipo: 'Porcentagem', base: 'Bruto', dataInicio: '10/10/2021', dataTermino: '10/10/2023', status: 'Encerrado', vara: '3ª Vara Cível', totalDebt: 5000, ordemImplantacao: 1, history: [{ id: 'h3', date: '10/10/2021 08:15', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }, { id: 'h4', date: '10/10/2023 18:00', status: 'Encerrado', action: 'Atualização de Status', observation: 'Processo encerrado por decurso de prazo.' }], selectedBonds: ['1'], selectedConsignados: [] },
   { id: '4', servidor: 'ANA PAULA SILVA', cpf: '789.012.345-33', matricula: '10004', processo: '0078901-23.2024.8.11.0005', valor: '15%', tipo: 'Porcentagem', base: 'Líquido', dataInicio: '01/03/2024', dataTermino: '-', status: 'Inativo', vara: '5ª Vara Cível', totalDebt: 0, ordemImplantacao: 1, history: [{ id: 'h5', date: '01/03/2024 11:20', status: 'Ativo', action: 'Criação do Registro', observation: 'Registro inicial.' }], selectedBonds: ['1'], selectedConsignados: [] },
@@ -680,7 +680,7 @@ function App() {
           position: 'fixed',
           top: '20px',
           right: '20px',
-          backgroundColor: '#10B981',
+          backgroundColor: 'var(--accent-color)',
           color: 'white',
           padding: '1rem 1.5rem',
           borderRadius: '8px',
@@ -852,9 +852,9 @@ function App() {
                         {sigaDocFile && <small style={{ color: '#059669', fontWeight: 600, marginTop: '4px', display: 'block' }}>📎 {sigaDocFile}</small>}
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Ofício</label>
+                        <label className="form-label">Decisão Judicial</label>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <label className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0 1rem', height: '38px', fontSize: '0.75rem', background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569' }}>
+                          <label className="btn btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0 1rem', height: '40px', fontSize: '0.75rem', background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569' }}>
                             <FileText size={16} />
                             {oficioTemplate || 'Anexo'}
                             <input
@@ -868,6 +868,17 @@ function App() {
                               }}
                             />
                           </label>
+                          {oficioTemplate && (
+                            <button 
+                              type="button" 
+                              className="btn btn-secondary" 
+                              style={{ width: '40px', minWidth: '40px', padding: 0, height: '40px', background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#2196F3' }}
+                              onClick={() => alert(`Visualizando anexo: ${oficioTemplate}`)}
+                              title="Visualizar anexo"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -981,7 +992,7 @@ function App() {
                       <Building2 size={18} />
                       Dados Bancários do Beneficiário
                     </h2>
-                    <div className="form-row">
+                    <div className="form-row" style={{ gridTemplateColumns: favorecidoCpfCnpj.replace(/\D/g, '').length === 11 ? '1.5fr 1fr 1fr' : '1fr 1fr' }}>
                       <div className="form-group">
                         <label className="form-label">Nome do Favorecido</label>
                         <input type="text" className="form-input" value={favorecidoNome} onChange={e => setFavorecidoNome(e.target.value)} placeholder="Nome completo" />
@@ -990,6 +1001,12 @@ function App() {
                         <label className="form-label">CPF/CNPJ do Favorecido</label>
                         <input type="text" className="form-input" value={favorecidoCpfCnpj} onChange={e => setFavorecidoCpfCnpj(formatCpfCnpj(e.target.value))} placeholder="000.000.000-00" />
                       </div>
+                      {favorecidoCpfCnpj.replace(/\D/g, '').length === 11 && (
+                        <div className="form-group">
+                          <label className="form-label">Data de Nascimento</label>
+                          <input type="date" className="form-input" value={credorDataNascimento} onChange={e => setCredorDataNascimento(e.target.value)} />
+                        </div>
+                      )}
                     </div>
                     <div className="form-row" style={{ gridTemplateColumns: (tipoPagamento === 'Conta Corrente' || tipoPagamento === 'Conta Poupança') ? '1fr 1.5fr 1fr 1fr' : tipoPagamento === 'PIX' ? '1fr 1fr 1.5fr' : '1fr 2fr' }}>
                       <div className="form-group">
@@ -1514,7 +1531,7 @@ function App() {
                   </div>
                   <button
                     className="btn btn-primary"
-                    style={{ height: '36px', padding: '0 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#3B82F6' }}
+                    style={{ padding: '0 15px', fontSize: '0.85rem' }}
                     onClick={() => setSearchQuery('')}
                   >
                     <RotateCcw size={14} />
@@ -1526,7 +1543,7 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '1.5rem' }}>
                 <button
                   className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6', border: 'none', padding: '0.6rem 2rem', fontWeight: 600 }}
+                  style={{ fontWeight: 600 }}
                   onClick={() => { resetCalc(); setActiveScreen('form'); }}
                 >
                   <Plus size={18} />
@@ -1589,7 +1606,7 @@ function App() {
                                   <option>Inativo</option>
                                 </select>
                               </div>
-                              <button className="btn btn-primary" style={{ height: '36px', fontSize: '0.8rem', padding: '0 15px', display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#3B82F6' }}>
+                              <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '0 15px' }}>
                                 <Menu size={16} />
                                 Limpar Filtro
                               </button>
@@ -1604,7 +1621,7 @@ function App() {
                                   <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Vara Judicial</th>
                                   <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Base de Cálculo</th>
 
-                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Mês/Competência</th>
+                                  <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Mês / Competência</th>
                                   <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Data Término</th>
                                   <th style={{ padding: '1rem 1rem', fontWeight: 700, color: '#475569' }}>Situação</th>
                                   <th style={{ padding: '1rem 1.5rem', fontWeight: 700, color: '#475569', textAlign: 'center' }}>Ações</th>
@@ -1653,7 +1670,7 @@ function App() {
                                       <div className="split-btn-group" style={{ position: 'relative', display: 'inline-flex' }}>
                                         <button
                                           className="btn btn-primary split-btn-main"
-                                          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, padding: '5px 12px', height: '30px', background: '#1E88E5', border: 'none', display: 'flex', alignItems: 'center' }}
+                                          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, padding: '5px 12px', height: '30px', background: 'var(--primary-color)', border: 'none', display: 'flex', alignItems: 'center' }}
                                           onClick={(e) => { e.stopPropagation(); setViewingPenhora(item); setOpenDropdownId(null); }}
                                           title="Visualizar"
                                         >
@@ -1661,7 +1678,7 @@ function App() {
                                         </button>
                                         <button
                                           className="btn btn-primary split-btn-trigger"
-                                          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, padding: '5px 6px', height: '30px', background: '#1E88E5', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
+                                          style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, padding: '5px 6px', height: '30px', background: 'var(--primary-color)', border: 'none', borderLeft: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center' }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setOpenDropdownId(openDropdownId === item.id ? null : item.id);
@@ -1751,14 +1768,29 @@ function App() {
                       <div style={{ fontWeight: 600 }}>{viewingPenhora.servidor}</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{viewingPenhora.cpf}</div>
                     </div>
-                    <div>
-                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>PROCESSO JUDICIAL</label>
-                      <div style={{ fontWeight: 600 }}>{viewingPenhora.processo}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{viewingPenhora.vara}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>PROCESSO JUDICIAL</label>
+                        <div style={{ fontWeight: 600 }}>{viewingPenhora.processo}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{viewingPenhora.vara}</div>
+                      </div>
+                      {viewingPenhora.oficioFile && (
+                        <div style={{ textAlign: 'right' }}>
+                          <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>ANEXO</label>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ height: '32px', fontSize: '0.75rem', padding: '0 10px', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #CBD5E1' }}
+                            onClick={() => alert(`Visualizando anexo: ${viewingPenhora.oficioFile}`)}
+                          >
+                            <Eye size={14} />
+                            Visualizar
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="modal-inner-grid">
                       <div>
-                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>MÊS/COMPETÊNCIA </label>
+                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>MÊS / COMPETÊNCIA </label>
                         <div style={{ fontWeight: 600 }}>{formatCompetencia(viewingPenhora.dataInicio)}</div>
                       </div>
                       <div>
@@ -1796,6 +1828,16 @@ function App() {
                       <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>FAVORECIDO</label>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.favorecidoNome || '-'}</div>
                     </div>
+                    <div>
+                      <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>IDENTIFICADOR (CPF/CNPJ)</label>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.favorecidoCpfCnpj || '-'}</div>
+                    </div>
+                    {viewingPenhora.favorecidoCpfCnpj?.replace(/\D/g, '').length === 11 && (
+                      <div>
+                        <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>DATA DE NASCIMENTO</label>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{formatDateBR(viewingPenhora.credorDataNascimento || '')}</div>
+                      </div>
+                    )}
                     <div>
                       <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>FORMA DE PAGAMENTO</label>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{viewingPenhora.tipoPagamento || 'Transferência Bancária'}</div>
