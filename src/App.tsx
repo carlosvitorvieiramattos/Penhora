@@ -1696,7 +1696,7 @@ function App() {
                                               onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
                                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                                             >
-                                              <FileText size={14} color="#059669" /> Gerar Ofício
+                                              <FileText size={16} color="#64748B" /> Gerar Ofício
                                             </button>
                                             <button
                                               className="dropdown-item"
@@ -1713,7 +1713,7 @@ function App() {
                                               onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
                                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                                             >
-                                              <Download size={14} color="#3B82F6" /> Baixar Anexo
+                                              <Download size={16} color="#64748B" /> Baixar Anexo
                                             </button>
                                             <button
                                               className="dropdown-item"
@@ -1723,6 +1723,15 @@ function App() {
                                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                                             >
                                               <Pencil size={14} color="#64748B" /> Editar
+                                            </button>
+                                            <button
+                                              className="dropdown-item"
+                                              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', color: '#475569', fontSize: '0.85rem', cursor: 'pointer' }}
+                                              onClick={(e) => { e.stopPropagation(); handleEdit(item); setOpenDropdownId(null); }}
+                                              onMouseOver={(e) => e.currentTarget.style.background = '#F1F5F9'}
+                                              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                              <PauseCircle size={16} color="#64748B" /> Inativar
                                             </button>
                                           </div>
                                         )}
