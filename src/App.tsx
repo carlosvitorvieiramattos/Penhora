@@ -25,8 +25,7 @@ import {
   FileText,
   Printer,
   Landmark,
-  Download,
-  PauseCircle
+  Download
 } from 'lucide-react';
 import './App.css';
 
@@ -1724,7 +1723,6 @@ function App() {
                                               onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                                             >
                                               <Pencil size={14} color="#64748B" /> Editar
-                                            </button>
                                             </button>
                                           </div>
                                         )}
