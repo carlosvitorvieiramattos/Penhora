@@ -869,9 +869,9 @@ function App() {
                             />
                           </label>
                           {oficioTemplate && (
-                            <button 
-                              type="button" 
-                              className="btn btn-secondary" 
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
                               style={{ width: '40px', minWidth: '40px', padding: 0, height: '40px', background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#2196F3' }}
                               onClick={() => alert(`Visualizando anexo: ${oficioTemplate}`)}
                               title="Visualizar anexo"
@@ -944,7 +944,7 @@ function App() {
                           >
                             <option value="Ativo">🟢 Ativo (Em andamento)</option>
                             <option value="Inativo">🔴 Inativo (Suspensão/Alteração)</option>
-                            <option value="Encerrado">⚪ Encerrado (Prazo concluído)</option>
+                            <option value="Encerrado">⚪ Quitado (Prazo Concluido)</option>
                             <option value="Quitado">✅ Quitado (Pagamento total)</option>
                             <option value="Acordo Judicial">🤝 Acordo Judicial</option>
                           </select>
@@ -1662,7 +1662,7 @@ function App() {
                                         background: item.status === 'Ativo' ? '#DCFCE7' : item.status === 'Encerrado' ? '#F1F5F9' : '#FEE2E2',
                                         color: item.status === 'Ativo' ? '#166534' : item.status === 'Encerrado' ? '#475569' : '#991B1B'
                                       }}>
-                                        {item.status.toUpperCase()}
+                                        {item.status === 'Encerrado' ? 'QUITADO (PRAZO CONCLUIDO)' : item.status.toUpperCase()}
                                       </span>
                                     </td>
 
@@ -1777,8 +1777,8 @@ function App() {
                       {viewingPenhora.oficioFile && (
                         <div style={{ textAlign: 'right' }}>
                           <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>ANEXO</label>
-                          <button 
-                            className="btn btn-secondary" 
+                          <button
+                            className="btn btn-secondary"
                             style={{ height: '32px', fontSize: '0.75rem', padding: '0 10px', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #CBD5E1' }}
                             onClick={() => alert(`Visualizando anexo: ${viewingPenhora.oficioFile}`)}
                           >
@@ -1804,7 +1804,7 @@ function App() {
                       <div>
                         <label style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '2px' }}>SITUAÇÃO</label>
                         <div style={{ fontWeight: 600, color: viewingPenhora.status === 'Ativo' ? '#059669' : viewingPenhora.status === 'Inativo' ? '#991B1B' : '#64748B' }}>
-                          {viewingPenhora.status}
+                          {viewingPenhora.status === 'Encerrado' ? 'Quitado (Prazo Concluido)' : viewingPenhora.status}
                         </div>
                       </div>
                     </div>
@@ -1911,7 +1911,7 @@ function App() {
                             </div>
                           )}
                           <div style={{ fontSize: '0.65rem', color: '#94A3B8', marginTop: '0.25rem' }}>
-                            Situação no momento: <span style={{ fontWeight: 600, color: entry.status === 'Ativo' ? '#059669' : '#64748B' }}>{entry.status}</span>
+                            Situação no momento: <span style={{ fontWeight: 600, color: entry.status === 'Ativo' ? '#059669' : '#64748B' }}>{entry.status === 'Encerrado' ? 'Quitado (Prazo Concluido)' : entry.status}</span>
                           </div>
                         </div>
                       </div>
@@ -1972,7 +1972,7 @@ function App() {
                         viewingPenhora.status === 'Suspenso' ? '#9A3412' :
                           viewingPenhora.status === 'Quitado' || viewingPenhora.status === 'Encerrado' ? '#475569' : '#1E40AF'
                     }}>
-                      {viewingPenhora.status === 'Ativo' ? 'LANÇAMENTO EM FOLHA' : viewingPenhora.status.toUpperCase()}
+                      {viewingPenhora.status === 'Ativo' ? 'LANÇAMENTO EM FOLHA' : viewingPenhora.status === 'Encerrado' ? 'QUITADO (PRAZO CONCLUIDO)' : viewingPenhora.status.toUpperCase()}
                     </span>
                   </div>
                 </div>
