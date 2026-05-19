@@ -2009,7 +2009,7 @@ function App() {
                 </button>
                 <button
                   className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0F172A' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fac02d', color: '#ffffff' }}
                   onClick={() => handleEdit(viewingPenhora)}
                 >
                   <Pencil size={16} />
